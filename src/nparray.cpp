@@ -17,6 +17,11 @@
 #include<typeinfo>
 
 template<class T>
+NPArray<T>::NPArray() {
+  c_continuous_ = true;
+}
+
+template<class T>
 NPArray<T>::NPArray(std::vector<size_t> init_shape) {
   if(init_shape.size() > 0) {
     shape_ = init_shape;

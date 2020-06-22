@@ -20,6 +20,7 @@ class NPArray {
   public:
     //==========================================================================
     // Constructors and Destructors
+    NPArray();
     NPArray(std::vector<size_t> init_shape);
     NPArray(std::vector<T> data, std::vector<size_t> init_shape,
         bool c_continuous=true);
