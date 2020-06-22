@@ -14,9 +14,13 @@
 
 #include<vector>
 #include<string>
+#include<stdexcept>
 
 template<class T>
 class NPArray {
+  private:
+    bool c_continuous_;
+
   public:
     //==========================================================================
     // Constructors and Destructors
@@ -37,7 +41,48 @@ class NPArray {
     const T& operator()(std::vector<size_t> indicies) const;
 
     // Variadic indexing operators
-    // TODO
+    // Access data with array idicies.
+    template <typename IND, typename... INDS>
+    T& operator()(IND ind0, INDS... inds) {
+      std::vector<size_t> indicies{static_cast<size_t>(ind0),
+                                   static_cast<size_t>(inds)...};
+      if (indicies.size() != shape_.size()) {
+        std::string mssg =
+            "Improper number of indicies provided to NPArray.";
+        throw std::runtime_error(mssg);
+      } else {
+        size_t indx;
+        if (c_continuous_) {
+          // Get linear index for row-major order
+          indx = c_continuous_index(indicies);
+        } else {
+          // Get linear index for column-major order
+          indx = fortran_continuous_index(indicies);
+        }
+        return data_[indx];
+      }
+    }
+
+    template <typename IND, typename... INDS>
+    const T& operator()(IND ind0, INDS... inds) const {
+      std::vector<size_t> indicies{static_cast<size_t>(ind0),
+                                   static_cast<size_t>(inds)...};
+      if (indicies.size() != shape_.size()) {
+        std::string mssg =
+            "Improper number of indicies provided to NPArray.";
+        throw std::runtime_error(mssg);
+      } else {
+        size_t indx;
+        if (c_continuous_) {
+          // Get linear index for row-major order
+          indx = c_continuous_index(indicies);
+        } else {
+          // Get linear index for column-major order
+          indx = fortran_continuous_index(indicies);
+        }
+        return data_[indx];
+      }
+    }
     
     // Linear Indexing operators
     T& operator[](size_t i);
@@ -76,7 +121,6 @@ class NPArray {
   private:
     std::vector<T> data_;
     std::vector<size_t> shape_;
-    bool c_continuous_;
 
     size_t c_continuous_index(const std::vector<size_t>& indicies) const;
     size_t fortran_continuous_index(const std::vector<size_t>& indicies) const;

@@ -12,8 +12,6 @@
 #include<nparray.hpp>
 
 #include"npy.hpp"
-
-#include<stdexcept>
 #include<typeinfo>
 
 template<class T>
@@ -258,45 +256,27 @@ void NPArray<T>::reallocate(std::vector<size_t> new_shape) {
 
 template<class T>
 size_t NPArray<T>::c_continuous_index(const std::vector<size_t>& indicies) const {
-  size_t indx = 0;
-  // Go through all dimensions
-  for (size_t k = 1; k <= shape_.size(); k++) {
-    size_t product = 0;
-    if (k == shape_.size())
-      product = 1;
-    else {
-      for (size_t l = k + 1; l <= shape_.size(); l++) {
-        if (product == 0)
-          product = shape_[l - 1];
-        else
-          product *= shape_[l - 1];
-      }
-    }
+  size_t indx = indicies[indicies.size() - 1];
+  size_t coeff = 1;
 
-    indx += product * indicies[k - 1];
+  for(size_t i = indicies.size() - 1; i > 0; i--) {
+    coeff *= shape_[i];
+    indx += coeff * indicies[i-1];
   }
+
   return indx;
 }
 
 template<class T>
 size_t NPArray<T>::fortran_continuous_index(const std::vector<size_t>& indicies) const {
-  size_t indx = 0;
-  // Go through all dimensions
-  for (size_t k = 1; k <= shape_.size(); k++) {
-    size_t product = 0;
-    if (k == 1)
-      product = 1;
-    else {
-      for (size_t l = 1; l <= k - 1; l++) {
-        if (product == 0)
-          product = shape_[l - 1];
-        else
-          product *= shape_[l - 1];
-      }
-    }
+  size_t indx = indicies[0];
+  size_t coeff = 1;
 
-    indx += product * indicies[k - 1];
+  for (size_t i = 0; i < shape_.size()-1; i++) {
+    coeff *= shape_[i];
+    indx += coeff * indicies[i+1];
   }
+
   return indx;
 }
 
