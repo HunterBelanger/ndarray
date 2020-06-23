@@ -129,12 +129,12 @@ class NPArray {
       }
 
       // Make sure all index values are valid
-      for(size_t i = 0; i < dimensions_; i++) {
+      /*for(size_t i = 0; i < dimensions_; i++) {
         if(indices[i] >= shape_[i]) {
           std::string mssg = "Index provided to NPArray out of range."; 
           throw std::out_of_range(mssg);
         }
-      }
+      }*/
     }
 
     size_t c_continuous_index(const std::vector<size_t>& indices) const;
@@ -142,10 +142,10 @@ class NPArray {
     
     template<size_t D>
     size_t c_continuous_index(const std::array<size_t, D>& indices) const {
-      size_t indx = indices[indices.size() - 1];
+      size_t indx = indices[dimensions_ - 1];
       size_t coeff = 1;
 
-      for(size_t i = indices.size() - 1; i > 0; i--) {
+      for(size_t i = dimensions_ - 1; i > 0; i--) {
         coeff *= shape_[i];
         indx += coeff * indices[i-1];
       }
@@ -158,7 +158,7 @@ class NPArray {
       size_t indx = indices[0];
       size_t coeff = 1;
 
-      for (size_t i = 0; i < indices.size()-1; i++) {
+      for (size_t i = 0; i < dimensions_-1; i++) {
         coeff *= shape_[i];
         indx += coeff * indices[i+1];
       }
