@@ -17,8 +17,6 @@
 #include<string>
 #include<stdexcept>
 
-#include<iostream>
-
 template<class T>
 class NPArray {
   private:
