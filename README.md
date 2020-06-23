@@ -35,8 +35,8 @@ only allows templates of the following type:
 * ```NPArray<int64_t>```
 * ```NPArray<float>```
 * ```NPArray<double>```
-
-Support for complex types will come in the future.
+* ```NPArray<std::complex<float>>```
+* ```NPArray<std::complex<double>>```
 
 ## Usage
 To be written soon...

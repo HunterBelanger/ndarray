@@ -22,8 +22,8 @@
 
 // Enum of possible data types which are currently handeled by this Exdir
 // implementation.
-enum class DType { CHAR, UCHAR, INT16, INT32, INT64,
-  UINT16, UINT32, UINT64, FLOAT32, DOUBLE64 };
+enum class DType { CHAR, UCHAR, INT16, INT32, INT64, UINT16, UINT32, UINT64,
+  FLOAT32, DOUBLE64, COMPLEX64, COMPLEX128 };
 
 // Function which opens file fname, and loads in the binary data into 1D
 // array of chars, which must latter be type cast be the user. The char* to
@@ -61,5 +61,8 @@ void swap_four_bytes(char* bytes);
 
 // Swaps the first eight bytes pointed to by char* bytes.
 void swap_eight_bytes(char* bytes);
+
+// Swaps the first sixteen bytes pointed to by char* bytes.
+void swap_sixteen_bytes(char* bytes);
 
 #endif  // NPARRAY_NPY_H

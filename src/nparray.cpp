@@ -12,7 +12,9 @@
 #include<nparray.hpp>
 
 #include"npy.hpp"
+
 #include<typeinfo>
+#include<complex>
 
 template<class T>
 NPArray<T>::NPArray() {
@@ -82,6 +84,8 @@ NPArray<T> NPArray<T>::load(std::string fname) {
   else if(T_type_name == typeid(int64_t).name()) expected_dtype = DType::INT64;
   else if(T_type_name == typeid(float).name()) expected_dtype = DType::FLOAT32;
   else if(T_type_name == typeid(double).name()) expected_dtype = DType::DOUBLE64;
+  else if(T_type_name == typeid(std::complex<float>).name()) expected_dtype = DType::COMPLEX64;
+  else if(T_type_name == typeid(std::complex<double>).name()) expected_dtype = DType::COMPLEX128;
   else {
     std::string mssg = "The datatype is not supported for NPArray."; 
     throw std::runtime_error(mssg);
@@ -204,6 +208,8 @@ void NPArray<T>::save(std::string fname) const {
   else if(T_type_name == typeid(int64_t).name()) dtype = DType::INT64;
   else if(T_type_name == typeid(float).name()) dtype = DType::FLOAT32;
   else if(T_type_name == typeid(double).name()) dtype = DType::DOUBLE64;
+  else if(T_type_name == typeid(std::complex<float>).name()) dtype = DType::COMPLEX64;
+  else if(T_type_name == typeid(std::complex<double>).name()) dtype = DType::COMPLEX128;
   else {
     std::string mssg = "The templated datatype is not supported by NPArray."; 
     throw std::runtime_error(mssg);
@@ -310,3 +316,5 @@ template class NPArray<int32_t>;
 template class NPArray<int64_t>;
 template class NPArray<float>;
 template class NPArray<double>;
+template class NPArray<std::complex<double>>;
+template class NPArray<std::complex<float>>;
