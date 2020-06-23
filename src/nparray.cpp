@@ -20,18 +20,19 @@ NPArray<T>::NPArray() {
 }
 
 template<class T>
-NPArray<T>::NPArray(std::vector<size_t> init_shape) {
+NPArray<T>::NPArray(std::vector<size_t> init_shape, bool c_continuous) {
   if(init_shape.size() > 0) {
     shape_ = init_shape;
+    dimensions_ = shape_.size();
 
     size_t ne = init_shape[0];
-    for(size_t i = 1; i < init_shape.size(); i++) {
+    for(size_t i = 1; i < dimensions_; i++) {
       ne *= init_shape[i]; 
     }
 
     data_.resize(ne);
 
-    c_continuous_ = true;
+    c_continuous_ = c_continuous;
 
   } else {
     std::string mssg = "NPArray shape vector must have at least one element."; 
@@ -43,9 +44,10 @@ template<class T>
 NPArray<T>::NPArray(std::vector<T> data, std::vector<size_t> init_shape, bool c_continuous) {
   if(init_shape.size() > 0) {
     shape_ = init_shape;
+    dimensions_ = shape_.size();
 
     size_t ne = init_shape[0];
-    for(size_t i = 1; i < init_shape.size(); i++) {
+    for(size_t i = 1; i < dimensions_; i++) {
       ne *= init_shape[i]; 
     }
 
@@ -126,39 +128,33 @@ NPArray<T> NPArray<T>::load(std::string fname) {
 }
 
 template<class T>
-T& NPArray<T>::operator()(std::vector<size_t> indicies) {
-  if (indicies.size() != shape_.size()) {
-    std::string mssg = "Improper number of indicies provided to NPArray.";
-    throw std::runtime_error(mssg);
+T& NPArray<T>::operator()(const std::vector<size_t>& indices) {
+  check_indices(indices);
+
+  size_t indx;
+  if (c_continuous_) {
+    // Get linear index for row-major order
+    indx = c_continuous_index(indices);
   } else {
-    size_t indx;
-    if (c_continuous_) {
-      // Get linear index for row-major order
-      indx = c_continuous_index(indicies);
-    } else {
-      // Get linear index for column-major order
-      indx = fortran_continuous_index(indicies);
-    }
-    return data_[indx];
+    // Get linear index for column-major order
+    indx = fortran_continuous_index(indices);
   }
+  return data_[indx];
 }
 
 template<class T>
-const T& NPArray<T>::operator()(std::vector<size_t> indicies) const {
-  if (indicies.size() != shape_.size()) {
-    std::string mssg = "Improper number of indicies provided to NPArray.";
-    throw std::runtime_error(mssg);
+const T& NPArray<T>::operator()(const std::vector<size_t>& indices) const {
+  check_indices(indices);
+
+  size_t indx;
+  if (c_continuous_) {
+    // Get linear index for row-major order
+    indx = c_continuous_index(indices);
   } else {
-    size_t indx;
-    if (c_continuous_) {
-      // Get linear index for row-major order
-      indx = c_continuous_index(indicies);
-    } else {
-      // Get linear index for column-major order
-      indx = fortran_continuous_index(indicies);
-    }
-    return data_[indx];
+    // Get linear index for column-major order
+    indx = fortran_continuous_index(indices);
   }
+  return data_[indx];
 }
 
 template<class T>
@@ -186,6 +182,8 @@ std::vector<size_t> NPArray<T>::shape() const {return shape_;}
 
 template<class T>
 size_t NPArray<T>::size() const {return data_.size();}
+
+
 
 template<class T>
 bool NPArray<T>::c_continuous() const {return c_continuous_;}
@@ -228,8 +226,10 @@ void NPArray<T>::reshape(std::vector<size_t> new_shape) {
       ne *= new_shape[i];
     }
 
-    if(ne == data_.size()) shape_ = new_shape;
-    else {
+    if(ne == data_.size()) {
+      shape_ = new_shape;
+      dimensions_ = shape_.size();
+    } else {
       std::string mssg = "Shape is incompatible with number of elements in NPArray.";
       throw std::runtime_error(mssg);
     }
@@ -250,31 +250,49 @@ void NPArray<T>::reallocate(std::vector<size_t> new_shape) {
     }
 
     shape_ = new_shape;
+    dimensions_ = shape_.size();
     data_.resize(ne);
   }
 }
 
 template<class T>
-size_t NPArray<T>::c_continuous_index(const std::vector<size_t>& indicies) const {
-  size_t indx = indicies[indicies.size() - 1];
+void NPArray<T>::check_indices(const std::vector<size_t>& indices) const {
+  // Make sure proper number of indices
+  if(indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NPArray."; 
+    throw std::runtime_error(mssg);
+  }
+
+  // Make sure all index values are valid
+  for(size_t i = 0; i < dimensions_; i++) {
+    if(indices[i] >= shape_[i]) {
+      std::string mssg = "Invalid index provided to NPArray out of range."; 
+      throw std::out_of_range(mssg);
+    }
+  }
+}
+
+template<class T>
+size_t NPArray<T>::c_continuous_index(const std::vector<size_t>& indices) const {
+  size_t indx = indices[indices.size() - 1];
   size_t coeff = 1;
 
-  for(size_t i = indicies.size() - 1; i > 0; i--) {
+  for(size_t i = indices.size() - 1; i > 0; i--) {
     coeff *= shape_[i];
-    indx += coeff * indicies[i-1];
+    indx += coeff * indices[i-1];
   }
 
   return indx;
 }
 
 template<class T>
-size_t NPArray<T>::fortran_continuous_index(const std::vector<size_t>& indicies) const {
-  size_t indx = indicies[0];
+size_t NPArray<T>::fortran_continuous_index(const std::vector<size_t>& indices) const {
+  size_t indx = indices[0];
   size_t coeff = 1;
 
-  for (size_t i = 0; i < shape_.size()-1; i++) {
+  for (size_t i = 0; i < indices.size()-1; i++) {
     coeff *= shape_[i];
-    indx += coeff * indicies[i+1];
+    indx += coeff * indices[i+1];
   }
 
   return indx;
