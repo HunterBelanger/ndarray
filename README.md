@@ -11,19 +11,21 @@ can lead to long load times, and large data files.
 Currently, there are no small and complete C++ libraries to complete this task.
 The xtensor library is a very good option, and I do recommend it. However, it
 is a large library which is likely much more than many need, especially in 
-smaller projects. Also, being header-only it can lead to long compile times,
-and large executables. If you are working on a larger project and need more
-NumPy magic than this code provides, I do recommend that you check it out
-[here](https://github.com/xtensor-stack/xtensor).
+smaller projects. If you are working on a larger project and need more
+NumPy magic than this library provides, I do recommend that you check it out
+[here](https://github.com/xtensor-stack/xtensor). It likely has everything
+you are looking for.
 
-To fill this niche, I have written the NPArray template library, a minimal
-implementation of NumPy style arrays for C++. These arrays can be
+I have written the NPArray template library, a minimal implementation of NumPy
+style arrays for C++, as a smaller alternative to xtensor. These arrays can be
 multi-dimensional, and reshaped like NumPy arrays. Indexing can be done either
 with a vector, or as variadic parammeters, both using the () operator. Access
 to the data using the linear index is also permitted via the [] operator.
 
-Due to the ```.npy``` file format only supporting certain types, this library
-only allows templates of the following type:
+It is also possible to load/save data from/to a ```.npy``` binary file. This
+allows for fast and easy access to the data in python (as well as many other
+languages). While the template container can be used to store any array of
+any type, the load and save methods are only valid for the following templates:
 
 * ```NPArray<char>```
 * ```NPArray<unsigned char>```
@@ -38,14 +40,21 @@ only allows templates of the following type:
 * ```NPArray<std::complex<float>>```
 * ```NPArray<std::complex<double>>```
 
+This is due to the fact that only certain numberic types are allowed by NumPy.
+Attempting to save a NPArray templated for a different type will result in
+and exception being thrown. Python and NumPy allow for the storing of raw
+Python objects in ```.npy``` files, but the loading of such files into a C++
+program with this library will also result in an exception.
+
 ## Usage
 To be written soon...
 
 ## Install
-This library should be included in a project, and built using CMake. Place the
-directory containing this repository into the directory for your project, and
-in your CMakeList.txt, add the line ```add_subdirectory(path/to/nparray)```.
-Then be sure to link your executable to the ```nparray``` target as well.
+This is a single file, header-only library. Just place the ```nparray.hpp```
+file in your projects include directory, inorder to include it for use.
 
-Alternatively, you may also build nparray on its own, making the
-```libnparray.a``` static library, which you can manually link to.
+While any modern C++ compiler will be more than adequate, it is highly
+recommended to use Clang over GCC, as it tends to do a better job of inlining
+the indexing calls. If you are noticing performance issues related to index
+look-up calls in this library, try using Clang if you aren't already to see
+if they improve.
