@@ -808,7 +808,7 @@ inline void write_npy(std::string fname, const char* data_ptr,
 
   // Write all data to file
   uint64_t n_bytes = n_elements * size_of_DType(dtype);
-  for (uint64_t i = 0; i < n_bytes; i++) file << data_ptr[i];
+  file.write(data_ptr, n_bytes);
 
   // Close file
   file.close();
