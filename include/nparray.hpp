@@ -72,11 +72,8 @@ class NPArray {
 
     // Variadic indexing operators
     // Access data with array idicies.
-    template <typename... INDS>
-    T& operator()(INDS... inds);
-
-    template <typename... INDS>
-    const T& operator()(INDS... inds) const;
+    template <typename... INDS> T& operator()(INDS... inds);
+    template <typename... INDS> const T& operator()(INDS... inds) const;
     
     // Linear Indexing operators
     T& operator[](size_t i);
@@ -93,8 +90,7 @@ class NPArray {
     
     size_t linear_index(const std::vector<size_t>& indices) const;
 
-    template <typename... INDS>
-    size_t linear_index(INDS... inds) const;
+    template <typename... INDS> size_t linear_index(INDS... inds) const;
     
     // Returns true if data is stored as c continuous (row-major order),
     // and false if fortran continuous (column-major order)
@@ -117,15 +113,31 @@ class NPArray {
     void reallocate(std::vector<size_t> new_shape);
 
     //==========================================================================
-    // Operators
-    // TODO
+    // Operators for Any Type (Same or Different)
+    template<class C> NPArray& operator+=(const NPArray<C>& a);
+    template<class C> NPArray& operator-=(const NPArray<C>& a);
+    template<class C> NPArray& operator*=(const NPArray<C>& a);
+    template<class C> NPArray& operator/=(const NPArray<C>& a);
+    
+    //==========================================================================
+    // Operators for Constants 
+    template<class C> NPArray& operator+=(C c);
+    template<class C> NPArray& operator-=(C c);
+    template<class C> NPArray& operator*=(C c);
+    template<class C> NPArray& operator/=(C c);
+
+    //==========================================================================
+    // Conversion Operator
+    template<class C> operator NPArray<C>() const;
 
   private:
     std::vector<T> data_;
     std::vector<size_t> shape_;
     bool c_continuous_;
     size_t dimensions_;
-    
+
+    template<class C> friend class NPArray;
+
     void check_indices(const std::vector<size_t>& indices) const;
 
     template<size_t D>
@@ -498,6 +510,155 @@ void NPArray<T>::reallocate(std::vector<size_t> new_shape) {
   }
 }
 
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator+=(const NPArray<C>& a) {
+  // Ensure same number of dimensions
+  if(dimensions_ != a.dimensions_) {
+    std::string mssg = "Cannot add two NPArrays with different dimensions.";
+    throw std::runtime_error(mssg);
+  }
+
+  // Ensure same shape
+  for(size_t i = 0; i < dimensions_; i++) {
+   if(shape_[i] != a.shape_[i]) {
+      std::string mssg = "Cannot add two NPArrays with different shapes";
+      throw std::runtime_error(mssg);
+    } 
+  }
+
+  // Do addition
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  += a.data_[i];
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator-=(const NPArray<C>& a) {
+  // Ensure same number of dimensions
+  if(dimensions_ != a.dimensions_) {
+    std::string mssg = "Cannot subtract two NPArrays with different dimensions.";
+    throw std::runtime_error(mssg);
+  }
+
+  // Ensure same shape
+  for(size_t i = 0; i < dimensions_; i++) {
+   if(shape_[i] != a.shape_[i]) {
+      std::string mssg = "Cannot subtract two NPArrays with different shapes";
+      throw std::runtime_error(mssg);
+    } 
+  }
+
+  // Do subtraction
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  -= a.data_[i];
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator*=(const NPArray<C>& a) {
+  // Ensure same number of dimensions
+  if(dimensions_ != a.dimensions_) {
+    std::string mssg = "Cannot multiply two NPArrays with different dimensions.";
+    throw std::runtime_error(mssg);
+  }
+
+  // Ensure same shape
+  for(size_t i = 0; i < dimensions_; i++) {
+   if(shape_[i] != a.shape_[i]) {
+      std::string mssg = "Cannot multiply two NPArrays with different shapes";
+      throw std::runtime_error(mssg);
+    } 
+  }
+
+  // Do multiplication
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  *= a.data_[i];
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator/=(const NPArray<C>& a) {
+  // Ensure same number of dimensions
+  if(dimensions_ != a.dimensions_) {
+    std::string mssg = "Cannot divide two NPArrays with different dimensions.";
+    throw std::runtime_error(mssg);
+  }
+
+  // Ensure same shape
+  for(size_t i = 0; i < dimensions_; i++) {
+   if(shape_[i] != a.shape_[i]) {
+      std::string mssg = "Cannot divide two NPArrays with different shapes";
+      throw std::runtime_error(mssg);
+    } 
+  }
+
+  // Do division
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  /= a.data_[i];
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator+=(C c) {
+  // Do addition
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  += c;
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator-=(C c) {
+  // Do subtraction
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  -= c.data_[i];
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator*=(C c) {
+  // Do multiplication
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  *= c;
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>& NPArray<T>::operator/=(C c) {
+  // Do division
+  for(size_t i = 0; i < data_.size(); i++) {
+    data_[i]  /= c;
+  }
+
+  return *this;
+}
+
+template<class T> template<class C>
+inline NPArray<T>::operator NPArray<C>() const {
+  // Make array to be returned of same shape
+  NPArray<C> new_array(shape_);
+
+  // Go through all elements
+  for(size_t i = 0; i < data_.size(); i++) {
+    new_array[i] = data_[i]; 
+  }
+
+  return new_array;
+}
+
 template<class T>
 inline void NPArray<T>::check_indices(const std::vector<size_t>& indices) const {
   // Make sure proper number of indices
@@ -515,8 +676,7 @@ inline void NPArray<T>::check_indices(const std::vector<size_t>& indices) const 
   }
 }
 
-template<class T>
-template<size_t D>
+template<class T> template<size_t D>
 inline void NPArray<T>::check_indices(const std::array<size_t, D>& indices) const {
   // Make sure proper number of indices
   if(indices.size() != dimensions_) {
@@ -560,8 +720,7 @@ const {
   return indx;
 }
 
-template<class T>
-template<size_t D>
+template<class T> template<size_t D>
 inline size_t NPArray<T>::c_continuous_index(const std::array<size_t, D>& indices)
 const {
   size_t indx = indices[dimensions_ - 1];
@@ -575,8 +734,7 @@ const {
   return indx;
 }
 
-template<class T>
-template<size_t D>
+template<class T> template<size_t D>
 inline size_t NPArray<T>::fortran_continuous_index(const std::array<size_t, D>& indices)
 const {
   size_t indx = indices[0];
