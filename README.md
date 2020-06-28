@@ -1,4 +1,4 @@
-# NPArray: NumPy style arrays for C++
+# NDArray: Numpy style arrays for C++
 A common scenario which arrises in scientific and high performance computing
 is the need to conduct calculations or simulations in faster, lower level
 languages such as C++, and then load results into a higher level language such
@@ -8,7 +8,7 @@ a specific format, making sure it is consisten, then writing a second python
 implementation to reliably read such data. If storing as raw text however, this
 can lead to long load times, and large data files.
 
-Currently, there are no small and complete C++ libraries to complete this task.
+Currently, there are few small and complete C++ libraries to complete this task.
 The xtensor library is a very good option, and I do recommend it. However, it
 is a large library which is likely much more than many need, especially in 
 smaller projects. If you are working on a larger project and need more
@@ -16,9 +16,9 @@ NumPy magic than this library provides, I do recommend that you check it out
 [here](https://github.com/xtensor-stack/xtensor). It likely has everything
 you are looking for.
 
-I have written the NPArray template library, a minimal implementation of NumPy
+I have written the NDArray template library, a minimal implementation of Numpy
 style arrays for C++, as a smaller alternative to xtensor. These arrays can be
-multi-dimensional, and reshaped like NumPy arrays. Indexing can be done either
+multi-dimensional, and reshaped like Numpy arrays. Indexing can be done either
 with a vector, or as variadic parammeters, both using the () operator. Access
 to the data using the linear index is also permitted via the [] operator.
 
@@ -27,22 +27,22 @@ allows for fast and easy access to the data in python (as well as many other
 languages). While the template container can be used to store any array of
 any type, the load and save methods are only valid for the following templates:
 
-* ```NPArray<char>```
-* ```NPArray<unsigned char>```
-* ```NPArray<uint16_t>```
-* ```NPArray<uint32_t>```
-* ```NPArray<uint64_t>```
-* ```NPArray<int16_t>```
-* ```NPArray<int32_t>```
-* ```NPArray<int64_t>```
-* ```NPArray<float>```
-* ```NPArray<double>```
-* ```NPArray<std::complex<float>>```
-* ```NPArray<std::complex<double>>```
+* ```NDArray<char>```
+* ```NDArray<unsigned char>```
+* ```NDArray<uint16_t>```
+* ```NDArray<uint32_t>```
+* ```NDArray<uint64_t>```
+* ```NDArray<int16_t>```
+* ```NDArray<int32_t>```
+* ```NDArray<int64_t>```
+* ```NDArray<float>```
+* ```NDArray<double>```
+* ```NDArray<std::complex<float>>```
+* ```NDArray<std::complex<double>>```
 
-This is due to the fact that only certain numberic types are allowed by NumPy.
-Attempting to save a NPArray templated for a different type will result in
-and exception being thrown. Python and NumPy allow for the storing of raw
+This is due to the fact that only certain numberic types are allowed by Numpy.
+Attempting to save a NDArray templated for a different type will result in
+and exception being thrown. Python and Numpy allow for the storing of raw
 Python objects in ```.npy``` files, but the loading of such files into a C++
 program with this library will also result in an exception.
 
@@ -50,11 +50,5 @@ program with this library will also result in an exception.
 To be written soon...
 
 ## Install
-This is a single file, header-only library. Just place the ```nparray.hpp```
+This is a single file, header-only library. Just place the ```ndarray.hpp```
 file in your projects include directory, inorder to include it for use.
-
-While any modern C++ compiler will be more than adequate, it is highly
-recommended to use Clang over GCC, as it tends to do a better job of inlining
-the indexing calls. If you are noticing performance issues related to index
-look-up calls in this library, try using Clang if you aren't already to see
-if they improve.

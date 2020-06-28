@@ -1,5 +1,5 @@
 /*
- * NPArray
+ * NDArray
  *
  * BSD 3-Clause License
  *
@@ -33,8 +33,8 @@
  * POSSIBILITY OF SUCH DAMAGE.
  *
  * */
-#ifndef NP_ARRAY_H
-#define NP_ARRAY_H
+#ifndef NDARRAY_H
+#define NDARRAY_H
 
 #include<array>
 #include<string>
@@ -47,21 +47,31 @@
 #include<algorithm>
 #include<stdexcept>
 
+// Macro to force function to be inlined. This is done for speed and to try and
+// force the compiler to vectorize operatrions.
+#if defined(_MSC_VER)
+#define NDARRAY_INLINE inline __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define NDARRAY_INLINE  inline __attribute__((always_inline))
+#else
+#define NDARRAY_INLINE inline
+#endif
+
 //==============================================================================
-// Template Class NPArray
+// Template Class NDArray
 template<class T>
-class NPArray {
+class NDArray {
   public:
     //==========================================================================
     // Constructors and Destructors
-    NPArray();
-    NPArray(std::vector<size_t> init_shape, bool c_continuous=true); 
-    NPArray(std::vector<T> data, std::vector<size_t> init_shape,
+    NDArray();
+    NDArray(std::vector<size_t> init_shape, bool c_continuous=true); 
+    NDArray(std::vector<T> data, std::vector<size_t> init_shape,
       bool c_continuous=true); 
-    ~NPArray() = default;
+    ~NDArray() = default;
 
     // Static load function
-    static NPArray load(std::string fname);
+    static NDArray load(std::string fname);
 
     //==========================================================================
     // Indexing
@@ -114,21 +124,21 @@ class NPArray {
 
     //==========================================================================
     // Operators for Any Type (Same or Different)
-    template<class C> NPArray& operator+=(const NPArray<C>& a);
-    template<class C> NPArray& operator-=(const NPArray<C>& a);
-    template<class C> NPArray& operator*=(const NPArray<C>& a);
-    template<class C> NPArray& operator/=(const NPArray<C>& a);
+    template<class C> NDArray& operator+=(const NDArray<C>& a);
+    template<class C> NDArray& operator-=(const NDArray<C>& a);
+    template<class C> NDArray& operator*=(const NDArray<C>& a);
+    template<class C> NDArray& operator/=(const NDArray<C>& a);
     
     //==========================================================================
     // Operators for Constants 
-    template<class C> NPArray& operator+=(C c);
-    template<class C> NPArray& operator-=(C c);
-    template<class C> NPArray& operator*=(C c);
-    template<class C> NPArray& operator/=(C c);
+    template<class C> NDArray& operator+=(C c);
+    template<class C> NDArray& operator-=(C c);
+    template<class C> NDArray& operator*=(C c);
+    template<class C> NDArray& operator/=(C c);
 
     //==========================================================================
     // Conversion Operator
-    template<class C> operator NPArray<C>() const;
+    template<class C> operator NDArray<C>() const;
 
   private:
     std::vector<T> data_;
@@ -136,13 +146,8 @@ class NPArray {
     bool c_continuous_;
     size_t dimensions_;
 
-    template<class C> friend class NPArray;
+    template<class C> friend class NDArray;
 
-    void check_indices(const std::vector<size_t>& indices) const;
-
-    template<size_t D>
-    void check_indices(const std::array<size_t, D>& indices) const;
-    
     size_t c_continuous_index(const std::vector<size_t>& indices) const;
 
     size_t fortran_continuous_index(const std::vector<size_t>& indices) const;
@@ -157,8 +162,7 @@ class NPArray {
 //==============================================================================
 // Declarations for NPY functions
 
-// Enum of possible data types which are currently handeled by this Exdir
-// implementation.
+// Enum of possible data types handeled by this implementation.
 enum class DType { CHAR, UCHAR, INT16, INT32, INT64, UINT16, UINT32, UINT64,
   FLOAT32, DOUBLE64, COMPLEX64, COMPLEX128 };
 
@@ -203,12 +207,12 @@ void swap_eight_bytes(char* bytes);
 void swap_sixteen_bytes(char* bytes);
 
 //==============================================================================
-// NPArray Implementation
+// NDArray Implementation
 template<class T>
-NPArray<T>::NPArray() {}
+NDArray<T>::NDArray() {}
 
 template<class T>
-NPArray<T>::NPArray(std::vector<size_t> init_shape, bool c_continuous) {
+NDArray<T>::NDArray(std::vector<size_t> init_shape, bool c_continuous) {
   if(init_shape.size() > 0) {
     shape_ = init_shape;
     dimensions_ = shape_.size();
@@ -223,13 +227,13 @@ NPArray<T>::NPArray(std::vector<size_t> init_shape, bool c_continuous) {
     c_continuous_ = c_continuous;
 
   } else {
-    std::string mssg = "NPArray shape vector must have at least one element."; 
+    std::string mssg = "NDArray shape vector must have at least one element."; 
     throw std::runtime_error(mssg);
   }
 }
 
 template<class T>
-NPArray<T>::NPArray(std::vector<T> data, std::vector<size_t> init_shape,
+NDArray<T>::NDArray(std::vector<T> data, std::vector<size_t> init_shape,
   bool c_continuous) {
   if(init_shape.size() > 0) {
     shape_ = init_shape;
@@ -241,7 +245,7 @@ NPArray<T>::NPArray(std::vector<T> data, std::vector<size_t> init_shape,
     }
 
     if(ne != data.size()) {
-      std::string mssg = "Shape is incompatible with number of elements provided for NPArray.";
+      std::string mssg = "Shape is incompatible with number of elements provided for NDArray.";
       throw std::runtime_error(mssg);
     }
 
@@ -250,13 +254,13 @@ NPArray<T>::NPArray(std::vector<T> data, std::vector<size_t> init_shape,
     c_continuous_ = c_continuous;
 
   } else {
-    std::string mssg = "Shape vector must have at least one element for NPArray."; 
+    std::string mssg = "Shape vector must have at least one element for NDArray."; 
     throw std::runtime_error(mssg);
   }
 }
 
 template<class T>
-NPArray<T> NPArray<T>::load(std::string fname) {
+NDArray<T> NDArray<T>::load(std::string fname) {
   // Get expected DType according to T
   DType expected_dtype;
   const char* T_type_name = typeid(T).name();
@@ -274,7 +278,7 @@ NPArray<T> NPArray<T>::load(std::string fname) {
   else if(T_type_name == typeid(std::complex<float>).name()) expected_dtype = DType::COMPLEX64;
   else if(T_type_name == typeid(std::complex<double>).name()) expected_dtype = DType::COMPLEX128;
   else {
-    std::string mssg = "The datatype is not supported for NPArray."; 
+    std::string mssg = "The datatype is not supported for NDArray."; 
     throw std::runtime_error(mssg);
   }
 
@@ -290,12 +294,12 @@ NPArray<T> NPArray<T>::load(std::string fname) {
 
   // Ensuire DType variables match
   if(expected_dtype != data_dtype) {
-    std::string mssg = "NPArray template datatype does not match specified datatype in npy file."; 
+    std::string mssg = "NDArray template datatype does not match specified datatype in npy file."; 
     throw std::runtime_error(mssg);
   }
 
   if(data_shape.size() < 1) {
-    std::string mssg = "Shape vector must have at least one element for NPArray."; 
+    std::string mssg = "Shape vector must have at least one element for NDArray."; 
     throw std::runtime_error(mssg);
   }
   
@@ -307,8 +311,8 @@ NPArray<T> NPArray<T>::load(std::string fname) {
 
   data_vector = {reinterpret_cast<T*>(data_ptr), reinterpret_cast<T*>(data_ptr)+ne};
 
-  // Create NPArray object
-  NPArray<T> return_object(data_vector, data_shape);
+  // Create NDArray object
+  NDArray<T> return_object(data_vector, data_shape);
   return_object.c_continuous_ = data_c_continuous;
 
   // Free data_ptr
@@ -319,9 +323,7 @@ NPArray<T> NPArray<T>::load(std::string fname) {
 }
 
 template<class T>
-inline T& NPArray<T>::operator()(const std::vector<size_t>& indices) {
-  check_indices(indices);
-
+NDARRAY_INLINE T& NDArray<T>::operator()(const std::vector<size_t>& indices) {
   size_t indx;
   if (c_continuous_) {
     // Get linear index for row-major order
@@ -334,9 +336,7 @@ inline T& NPArray<T>::operator()(const std::vector<size_t>& indices) {
 }
 
 template<class T>
-inline const T& NPArray<T>::operator()(const std::vector<size_t>& indices) const {
-  check_indices(indices);
-
+NDARRAY_INLINE const T& NDArray<T>::operator()(const std::vector<size_t>& indices) const {
   size_t indx;
   if (c_continuous_) {
     // Get linear index for row-major order
@@ -348,13 +348,10 @@ inline const T& NPArray<T>::operator()(const std::vector<size_t>& indices) const
   return data_[indx];
 }
 
-template<class T>
-template <typename... INDS>
-inline T& NPArray<T>::operator()(INDS... inds) {
+template<class T> template <typename... INDS>
+NDARRAY_INLINE T& NDArray<T>::operator()(INDS... inds) {
   std::array<size_t, sizeof...(inds)> indices{static_cast<size_t>(inds)...};
 
-  check_indices(indices);
-
   size_t indx;
   if (c_continuous_) {
     // Get linear index for row-major order
@@ -366,13 +363,10 @@ inline T& NPArray<T>::operator()(INDS... inds) {
   return data_[indx];
 }
 
-template<class T>
-template <typename... INDS>
-inline const T& NPArray<T>::operator()(INDS... inds) const {
+template<class T> template <typename... INDS>
+NDARRAY_INLINE const T& NDArray<T>::operator()(INDS... inds) const {
   std::array<size_t, sizeof...(inds)> indices{static_cast<size_t>(inds)...};
 
-  check_indices(indices);
-
   size_t indx;
   if (c_continuous_) {
     // Get linear index for row-major order
@@ -385,25 +379,23 @@ inline const T& NPArray<T>::operator()(INDS... inds) const {
 }
 
 template<class T>
-inline T& NPArray<T>::operator[](size_t i) {
+NDARRAY_INLINE T& NDArray<T>::operator[](size_t i) {
   return data_[i];
 }
 
 template<class T>
-inline const T& NPArray<T>::operator[](size_t i) const {
+NDARRAY_INLINE const T& NDArray<T>::operator[](size_t i) const {
   return data_[i];
 }
 
 template<class T>
-inline std::vector<size_t> NPArray<T>::shape() const {return shape_;}
+NDARRAY_INLINE std::vector<size_t> NDArray<T>::shape() const {return shape_;}
 
 template<class T>
-inline size_t NPArray<T>::size() const {return data_.size();}
+NDARRAY_INLINE size_t NDArray<T>::size() const {return data_.size();}
 
 template<class T>
-inline size_t NPArray<T>::linear_index(const std::vector<size_t>& indices) const {
-  check_indices(indices);
-
+NDARRAY_INLINE size_t NDArray<T>::linear_index(const std::vector<size_t>& indices) const {
   if (c_continuous_) {
     // Get linear index for row-major order
     return c_continuous_index(indices);
@@ -413,12 +405,9 @@ inline size_t NPArray<T>::linear_index(const std::vector<size_t>& indices) const
   }
 }
 
-template<class T>
-template <typename... INDS>
-inline size_t NPArray<T>::linear_index(INDS... inds) const {
+template<class T> template <typename... INDS>
+NDARRAY_INLINE size_t NDArray<T>::linear_index(INDS... inds) const {
   std::array<size_t, sizeof...(inds)> indices{static_cast<size_t>(inds)...};
-
-  check_indices(indices);
 
   if (c_continuous_) {
     // Get linear index for row-major order
@@ -430,10 +419,10 @@ inline size_t NPArray<T>::linear_index(INDS... inds) const {
 }
     
 template<class T>
-inline bool NPArray<T>::c_continuous() const {return c_continuous_;}
+NDARRAY_INLINE bool NDArray<T>::c_continuous() const {return c_continuous_;}
 
 template<class T>
-void NPArray<T>::save(std::string fname) const {
+void NDArray<T>::save(std::string fname) const {
   // Get expected DType according to T
   DType dtype;
   const char* T_type_name = typeid(T).name();
@@ -451,7 +440,7 @@ void NPArray<T>::save(std::string fname) const {
   else if(T_type_name == typeid(std::complex<float>).name()) dtype = DType::COMPLEX64;
   else if(T_type_name == typeid(std::complex<double>).name()) dtype = DType::COMPLEX128;
   else {
-    std::string mssg = "The datatype is not supported for NPArray."; 
+    std::string mssg = "The datatype is not supported for NDArray."; 
     throw std::runtime_error(mssg);
   }
 
@@ -461,16 +450,16 @@ void NPArray<T>::save(std::string fname) const {
 }
 
 template<class T>
-inline void NPArray<T>::fill(T val) {
+void NDArray<T>::fill(T val) {
   std::fill(data_.begin(), data_.end(), val); 
 }
 
 template<class T>
-inline void NPArray<T>::reshape(std::vector<size_t> new_shape) {
+void NDArray<T>::reshape(std::vector<size_t> new_shape) {
   // Ensure new shape has proper dimensions
   if(new_shape.size() < 1) {
     std::string mssg = "Shape vector must have at least one element to"
-                       " reshpae NPArray.";
+                       " reshpae NDArray.";
     throw std::runtime_error(mssg);
   } else {
     size_t ne = new_shape[0];
@@ -484,18 +473,18 @@ inline void NPArray<T>::reshape(std::vector<size_t> new_shape) {
       dimensions_ = shape_.size();
     } else {
       std::string mssg = "Shape is incompatible with number of elements in"
-                         " NPArray.";
+                         " NDArray.";
       throw std::runtime_error(mssg);
     }
   }
 }
 
 template<class T>
-void NPArray<T>::reallocate(std::vector<size_t> new_shape) {
+void NDArray<T>::reallocate(std::vector<size_t> new_shape) {
   // Ensure new shape has proper dimensions
   if(new_shape.size() < 1) {
     std::string mssg = "Shape vector must have at least one element to"
-                       " reallocate NPArray.";
+                       " reallocate NDArray.";
     throw std::runtime_error(mssg);
   } else {
     size_t ne = new_shape[0];
@@ -511,17 +500,17 @@ void NPArray<T>::reallocate(std::vector<size_t> new_shape) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator+=(const NPArray<C>& a) {
+NDArray<T>& NDArray<T>::operator+=(const NDArray<C>& a) {
   // Ensure same number of dimensions
   if(dimensions_ != a.dimensions_) {
-    std::string mssg = "Cannot add two NPArrays with different dimensions.";
+    std::string mssg = "Cannot add two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
   for(size_t i = 0; i < dimensions_; i++) {
    if(shape_[i] != a.shape_[i]) {
-      std::string mssg = "Cannot add two NPArrays with different shapes";
+      std::string mssg = "Cannot add two NDArrays with different shapes";
       throw std::runtime_error(mssg);
     } 
   }
@@ -535,17 +524,17 @@ inline NPArray<T>& NPArray<T>::operator+=(const NPArray<C>& a) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator-=(const NPArray<C>& a) {
+NDArray<T>& NDArray<T>::operator-=(const NDArray<C>& a) {
   // Ensure same number of dimensions
   if(dimensions_ != a.dimensions_) {
-    std::string mssg = "Cannot subtract two NPArrays with different dimensions.";
+    std::string mssg = "Cannot subtract two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
   for(size_t i = 0; i < dimensions_; i++) {
    if(shape_[i] != a.shape_[i]) {
-      std::string mssg = "Cannot subtract two NPArrays with different shapes";
+      std::string mssg = "Cannot subtract two NDArrays with different shapes";
       throw std::runtime_error(mssg);
     } 
   }
@@ -559,17 +548,17 @@ inline NPArray<T>& NPArray<T>::operator-=(const NPArray<C>& a) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator*=(const NPArray<C>& a) {
+NDArray<T>& NDArray<T>::operator*=(const NDArray<C>& a) {
   // Ensure same number of dimensions
   if(dimensions_ != a.dimensions_) {
-    std::string mssg = "Cannot multiply two NPArrays with different dimensions.";
+    std::string mssg = "Cannot multiply two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
   for(size_t i = 0; i < dimensions_; i++) {
    if(shape_[i] != a.shape_[i]) {
-      std::string mssg = "Cannot multiply two NPArrays with different shapes";
+      std::string mssg = "Cannot multiply two NDArrays with different shapes";
       throw std::runtime_error(mssg);
     } 
   }
@@ -583,17 +572,17 @@ inline NPArray<T>& NPArray<T>::operator*=(const NPArray<C>& a) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator/=(const NPArray<C>& a) {
+NDArray<T>& NDArray<T>::operator/=(const NDArray<C>& a) {
   // Ensure same number of dimensions
   if(dimensions_ != a.dimensions_) {
-    std::string mssg = "Cannot divide two NPArrays with different dimensions.";
+    std::string mssg = "Cannot divide two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
   for(size_t i = 0; i < dimensions_; i++) {
    if(shape_[i] != a.shape_[i]) {
-      std::string mssg = "Cannot divide two NPArrays with different shapes";
+      std::string mssg = "Cannot divide two NDArrays with different shapes";
       throw std::runtime_error(mssg);
     } 
   }
@@ -607,7 +596,7 @@ inline NPArray<T>& NPArray<T>::operator/=(const NPArray<C>& a) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator+=(C c) {
+NDArray<T>& NDArray<T>::operator+=(C c) {
   // Do addition
   for(size_t i = 0; i < data_.size(); i++) {
     data_[i]  += c;
@@ -617,7 +606,7 @@ inline NPArray<T>& NPArray<T>::operator+=(C c) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator-=(C c) {
+NDArray<T>& NDArray<T>::operator-=(C c) {
   // Do subtraction
   for(size_t i = 0; i < data_.size(); i++) {
     data_[i]  -= c.data_[i];
@@ -627,7 +616,7 @@ inline NPArray<T>& NPArray<T>::operator-=(C c) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator*=(C c) {
+NDArray<T>& NDArray<T>::operator*=(C c) {
   // Do multiplication
   for(size_t i = 0; i < data_.size(); i++) {
     data_[i]  *= c;
@@ -637,7 +626,7 @@ inline NPArray<T>& NPArray<T>::operator*=(C c) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>& NPArray<T>::operator/=(C c) {
+NDArray<T>& NDArray<T>::operator/=(C c) {
   // Do division
   for(size_t i = 0; i < data_.size(); i++) {
     data_[i]  /= c;
@@ -647,9 +636,9 @@ inline NPArray<T>& NPArray<T>::operator/=(C c) {
 }
 
 template<class T> template<class C>
-inline NPArray<T>::operator NPArray<C>() const {
+NDArray<T>::operator NDArray<C>() const {
   // Make array to be returned of same shape
-  NPArray<C> new_array(shape_);
+  NDArray<C> new_array(shape_);
 
   // Go through all elements
   for(size_t i = 0; i < data_.size(); i++) {
@@ -660,45 +649,27 @@ inline NPArray<T>::operator NPArray<C>() const {
 }
 
 template<class T>
-inline void NPArray<T>::check_indices(const std::vector<size_t>& indices) const {
+NDARRAY_INLINE size_t NDArray<T>::c_continuous_index(const std::vector<size_t>& indices) const {
   // Make sure proper number of indices
   if(indices.size() != dimensions_) {
-    std::string mssg = "Improper number of indicies provided to NPArray."; 
+    std::string mssg = "Improper number of indicies provided to NDArray."; 
     throw std::runtime_error(mssg);
   }
 
-  // Make sure all index values are valid
-  for(size_t i = 0; i < dimensions_; i++) {
-    if(indices[i] >= shape_[i]) {
-      std::string mssg = "Invalid index provided to NPArray out of range."; 
-      throw std::out_of_range(mssg);
-    }
-  }
-}
-
-template<class T> template<size_t D>
-inline void NPArray<T>::check_indices(const std::array<size_t, D>& indices) const {
-  // Make sure proper number of indices
-  if(indices.size() != dimensions_) {
-    std::string mssg = "Improper number of indicies provided to NPArray."; 
-    throw std::runtime_error(mssg);
-  }
-
-  // Make sure all index values are valid
-  for(size_t i = 0; i < dimensions_; i++) {
-    if(indices[i] >= shape_[i]) {
-      std::string mssg = "Index provided to NPArray out of range."; 
-      throw std::out_of_range(mssg);
-    }
-  }
-}
-
-template<class T>
-inline size_t NPArray<T>::c_continuous_index(const std::vector<size_t>& indices) const {
   size_t indx = indices[dimensions_ - 1];
+  if(indx >= shape_[dimensions_ - 1]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+  }
+
   size_t coeff = 1;
 
   for(size_t i = dimensions_ - 1; i > 0; i--) {
+    if(indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+    }
+
     coeff *= shape_[i];
     indx += coeff * indices[i-1];
   }
@@ -707,12 +678,27 @@ inline size_t NPArray<T>::c_continuous_index(const std::vector<size_t>& indices)
 }
 
 template<class T>
-inline size_t NPArray<T>::fortran_continuous_index(const std::vector<size_t>& indices)
+NDARRAY_INLINE size_t NDArray<T>::fortran_continuous_index(const std::vector<size_t>& indices)
 const {
+  // Make sure proper number of indices
+  if(indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray."; 
+    throw std::runtime_error(mssg);
+  }
+
   size_t indx = indices[0];
+  if(indx >= shape_[0]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+  }
   size_t coeff = 1;
 
   for (size_t i = 0; i < dimensions_-1; i++) {
+    if(indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+    }
+
     coeff *= shape_[i];
     indx += coeff * indices[i+1];
   }
@@ -721,12 +707,28 @@ const {
 }
 
 template<class T> template<size_t D>
-inline size_t NPArray<T>::c_continuous_index(const std::array<size_t, D>& indices)
+NDARRAY_INLINE size_t NDArray<T>::c_continuous_index(const std::array<size_t, D>& indices)
 const {
+  // Make sure proper number of indices
+  if(indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray."; 
+    throw std::runtime_error(mssg);
+  }
+
   size_t indx = indices[dimensions_ - 1];
+  if(indx >= shape_[dimensions_ - 1]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+  }
+
   size_t coeff = 1;
 
   for(size_t i = dimensions_ - 1; i > 0; i--) {
+    if(indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+    }
+
     coeff *= shape_[i];
     indx += coeff * indices[i-1];
   }
@@ -735,17 +737,32 @@ const {
 }
 
 template<class T> template<size_t D>
-inline size_t NPArray<T>::fortran_continuous_index(const std::array<size_t, D>& indices)
+NDARRAY_INLINE size_t NDArray<T>::fortran_continuous_index(const std::array<size_t, D>& indices)
 const {
+   // Make sure proper number of indices
+  if(indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray."; 
+    throw std::runtime_error(mssg);
+  }
+
   size_t indx = indices[0];
+  if(indx >= shape_[0]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+  }
   size_t coeff = 1;
 
   for (size_t i = 0; i < dimensions_-1; i++) {
+    if(indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range."; 
+      throw std::out_of_range(mssg);
+    }
+
     coeff *= shape_[i];
     indx += coeff * indices[i+1];
   }
 
-  return indx;
+  return indx; 
 }
 
 //==============================================================================
