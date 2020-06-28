@@ -36,146 +36,172 @@
 #ifndef NDARRAY_H
 #define NDARRAY_H
 
-#include<array>
-#include<string>
-#include<vector>
-#include<complex>
-#include<cstdint>
-#include<cstring>
-#include<fstream>
-#include<typeinfo>
-#include<algorithm>
-#include<stdexcept>
+#include <algorithm>
+#include <array>
+#include <complex>
+#include <cstdint>
+#include <cstring>
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <vector>
 
 // Macro to force function to be inlined. This is done for speed and to try and
 // force the compiler to vectorize operatrions.
 #if defined(_MSC_VER)
 #define NDARRAY_INLINE inline __forceinline
 #elif defined(__GNUC__) || defined(__clang__)
-#define NDARRAY_INLINE  inline __attribute__((always_inline))
+#define NDARRAY_INLINE inline __attribute__((always_inline))
 #else
 #define NDARRAY_INLINE inline
 #endif
 
 //==============================================================================
 // Template Class NDArray
-template<class T>
+template <class T>
 class NDArray {
-  public:
-    //==========================================================================
-    // Constructors and Destructors
-    NDArray();
-    NDArray(std::vector<size_t> init_shape, bool c_continuous=true); 
-    NDArray(std::vector<T> data, std::vector<size_t> init_shape,
-      bool c_continuous=true); 
-    ~NDArray() = default;
+ public:
+  //==========================================================================
+  // Constructors and Destructors
+  NDArray();
+  NDArray(std::vector<size_t> init_shape, bool c_continuous = true);
+  NDArray(std::vector<T> data, std::vector<size_t> init_shape,
+          bool c_continuous = true);
+  ~NDArray() = default;
 
-    // Static load function
-    static NDArray load(std::string fname);
+  // Static load function
+  static NDArray load(std::string fname);
 
-    //==========================================================================
-    // Indexing
-    
-    // Indexing operators for indexing with vector
-    T& operator()(const std::vector<size_t>& indices);
-    const T& operator()(const std::vector<size_t>& indices) const;
+  //==========================================================================
+  // Indexing
 
-    // Variadic indexing operators
-    // Access data with array idicies.
-    template <typename... INDS> T& operator()(INDS... inds);
-    template <typename... INDS> const T& operator()(INDS... inds) const;
-    
-    // Linear Indexing operators
-    T& operator[](size_t i);
-    const T& operator[](size_t i) const;
-    
-    //========================================================================== 
-    // Constant Methods
-    
-    // Return vector describing shape of array 
-    std::vector<size_t> shape() const;
+  // Indexing operators for indexing with vector
+  T& operator()(const std::vector<size_t>& indices);
+  const T& operator()(const std::vector<size_t>& indices) const;
 
-    // Return number of elements in array
-    size_t size() const;
-    
-    size_t linear_index(const std::vector<size_t>& indices) const;
+  // Variadic indexing operators
+  // Access data with array idicies.
+  template <typename... INDS>
+  T& operator()(INDS... inds);
+  template <typename... INDS>
+  const T& operator()(INDS... inds) const;
 
-    template <typename... INDS> size_t linear_index(INDS... inds) const;
-    
-    // Returns true if data is stored as c continuous (row-major order),
-    // and false if fortran continuous (column-major order)
-    bool c_continuous() const;
-    
-    // Save array to the file fname.npy
-    void save(std::string fname) const;
+  // Linear Indexing operators
+  T& operator[](size_t i);
+  const T& operator[](size_t i) const;
 
-    //==========================================================================
-    // Non-Constant Methods
-    
-    // Fills entire array with the value provided 
-    void fill(T val);
-    
-    // Will reshape the array to the given dimensions
-    void reshape(std::vector<size_t> new_shape);
+  //==========================================================================
+  // Constant Methods
 
-    // Realocates array to fit the new size.
-    // DATA CAN BE LOST IF ARRAY IS SHRUNK
-    void reallocate(std::vector<size_t> new_shape);
+  // Return vector describing shape of array
+  std::vector<size_t> shape() const;
 
-    //==========================================================================
-    // Operators for Any Type (Same or Different)
-    template<class C> NDArray& operator+=(const NDArray<C>& a);
-    template<class C> NDArray& operator-=(const NDArray<C>& a);
-    template<class C> NDArray& operator*=(const NDArray<C>& a);
-    template<class C> NDArray& operator/=(const NDArray<C>& a);
-    
-    //==========================================================================
-    // Operators for Constants 
-    template<class C> NDArray& operator+=(C c);
-    template<class C> NDArray& operator-=(C c);
-    template<class C> NDArray& operator*=(C c);
-    template<class C> NDArray& operator/=(C c);
+  // Return number of elements in array
+  size_t size() const;
 
-    //==========================================================================
-    // Conversion Operator
-    template<class C> operator NDArray<C>() const;
+  size_t linear_index(const std::vector<size_t>& indices) const;
 
-  private:
-    std::vector<T> data_;
-    std::vector<size_t> shape_;
-    bool c_continuous_;
-    size_t dimensions_;
+  template <typename... INDS>
+  size_t linear_index(INDS... inds) const;
 
-    template<class C> friend class NDArray;
+  // Returns true if data is stored as c continuous (row-major order),
+  // and false if fortran continuous (column-major order)
+  bool c_continuous() const;
 
-    size_t c_continuous_index(const std::vector<size_t>& indices) const;
+  // Save array to the file fname.npy
+  void save(std::string fname) const;
 
-    size_t fortran_continuous_index(const std::vector<size_t>& indices) const;
-    
-    template<size_t D>
-    inline size_t c_continuous_index(const std::array<size_t, D>& indices) const;
+  //==========================================================================
+  // Non-Constant Methods
 
-    template<size_t D>
-    inline size_t fortran_continuous_index(const std::array<size_t, D>& indices) const;
+  // Fills entire array with the value provided
+  void fill(T val);
+
+  // Will reshape the array to the given dimensions
+  void reshape(std::vector<size_t> new_shape);
+
+  // Realocates array to fit the new size.
+  // DATA CAN BE LOST IF ARRAY IS SHRUNK
+  void reallocate(std::vector<size_t> new_shape);
+
+  //==========================================================================
+  // Operators for Any Type (Same or Different)
+  template <class C>
+  NDArray& operator+=(const NDArray<C>& a);
+  template <class C>
+  NDArray& operator-=(const NDArray<C>& a);
+  template <class C>
+  NDArray& operator*=(const NDArray<C>& a);
+  template <class C>
+  NDArray& operator/=(const NDArray<C>& a);
+
+  //==========================================================================
+  // Operators for Constants
+  template <class C>
+  NDArray& operator+=(C c);
+  template <class C>
+  NDArray& operator-=(C c);
+  template <class C>
+  NDArray& operator*=(C c);
+  template <class C>
+  NDArray& operator/=(C c);
+
+  //==========================================================================
+  // Conversion Operator
+  template <class C>
+  operator NDArray<C>() const;
+
+ private:
+  std::vector<T> data_;
+  std::vector<size_t> shape_;
+  bool c_continuous_;
+  size_t dimensions_;
+
+  template <class C>
+  friend class NDArray;
+
+  size_t c_continuous_index(const std::vector<size_t>& indices) const;
+
+  size_t fortran_continuous_index(const std::vector<size_t>& indices) const;
+
+  template <size_t D>
+  inline size_t c_continuous_index(const std::array<size_t, D>& indices) const;
+
+  template <size_t D>
+  inline size_t fortran_continuous_index(
+      const std::array<size_t, D>& indices) const;
 };
 
 //==============================================================================
 // Declarations for NPY functions
 
 // Enum of possible data types handeled by this implementation.
-enum class DType { CHAR, UCHAR, INT16, INT32, INT64, UINT16, UINT32, UINT64,
-  FLOAT32, DOUBLE64, COMPLEX64, COMPLEX128 };
+enum class DType {
+  CHAR,
+  UCHAR,
+  INT16,
+  INT32,
+  INT64,
+  UINT16,
+  UINT32,
+  UINT64,
+  FLOAT32,
+  DOUBLE64,
+  COMPLEX64,
+  COMPLEX128
+};
 
 // Function which opens file fname, and loads in the binary data into 1D
 // array of chars, which must latter be type cast be the user. The char* to
 // the data is returned as a reference, along with the number of elements,
 // continuits, and element size in bytes. Returned is a vector for the shape.
 void load_npy(std::string fname, char*& data_ptr, std::vector<size_t>& shape,
-    DType& dtype, bool& c_contiguous);
+              DType& dtype, bool& c_contiguous);
 
 // Function which writes binary data to a Numpy .npy file.
 void write_npy(std::string fname, const char* data_ptr,
-    std::vector<size_t> shape, DType dtype, bool c_contiguous);
+               std::vector<size_t> shape, DType dtype, bool c_contiguous);
 
 // Returns the proper DType for a given Numpy dtype.descr string.
 DType descr_to_DType(std::string dtype);
@@ -208,18 +234,18 @@ void swap_sixteen_bytes(char* bytes);
 
 //==============================================================================
 // NDArray Implementation
-template<class T>
+template <class T>
 NDArray<T>::NDArray() {}
 
-template<class T>
+template <class T>
 NDArray<T>::NDArray(std::vector<size_t> init_shape, bool c_continuous) {
-  if(init_shape.size() > 0) {
+  if (init_shape.size() > 0) {
     shape_ = init_shape;
     dimensions_ = shape_.size();
 
     size_t ne = init_shape[0];
-    for(size_t i = 1; i < dimensions_; i++) {
-      ne *= init_shape[i]; 
+    for (size_t i = 1; i < dimensions_; i++) {
+      ne *= init_shape[i];
     }
 
     data_.resize(ne);
@@ -227,25 +253,26 @@ NDArray<T>::NDArray(std::vector<size_t> init_shape, bool c_continuous) {
     c_continuous_ = c_continuous;
 
   } else {
-    std::string mssg = "NDArray shape vector must have at least one element."; 
+    std::string mssg = "NDArray shape vector must have at least one element.";
     throw std::runtime_error(mssg);
   }
 }
 
-template<class T>
+template <class T>
 NDArray<T>::NDArray(std::vector<T> data, std::vector<size_t> init_shape,
-  bool c_continuous) {
-  if(init_shape.size() > 0) {
+                    bool c_continuous) {
+  if (init_shape.size() > 0) {
     shape_ = init_shape;
     dimensions_ = shape_.size();
 
     size_t ne = init_shape[0];
-    for(size_t i = 1; i < dimensions_; i++) {
-      ne *= init_shape[i]; 
+    for (size_t i = 1; i < dimensions_; i++) {
+      ne *= init_shape[i];
     }
 
-    if(ne != data.size()) {
-      std::string mssg = "Shape is incompatible with number of elements provided for NDArray.";
+    if (ne != data.size()) {
+      std::string mssg =
+          "Shape is incompatible with number of elements provided for NDArray.";
       throw std::runtime_error(mssg);
     }
 
@@ -254,31 +281,44 @@ NDArray<T>::NDArray(std::vector<T> data, std::vector<size_t> init_shape,
     c_continuous_ = c_continuous;
 
   } else {
-    std::string mssg = "Shape vector must have at least one element for NDArray."; 
+    std::string mssg =
+        "Shape vector must have at least one element for NDArray.";
     throw std::runtime_error(mssg);
   }
 }
 
-template<class T>
+template <class T>
 NDArray<T> NDArray<T>::load(std::string fname) {
   // Get expected DType according to T
   DType expected_dtype;
   const char* T_type_name = typeid(T).name();
 
-  if(T_type_name == typeid(char).name()) expected_dtype = DType::CHAR;
-  else if(T_type_name == typeid(unsigned char).name()) expected_dtype = DType::UCHAR;
-  else if(T_type_name == typeid(uint16_t).name()) expected_dtype = DType::UINT16;
-  else if(T_type_name == typeid(uint32_t).name()) expected_dtype = DType::UINT32;
-  else if(T_type_name == typeid(uint64_t).name()) expected_dtype = DType::UINT64;
-  else if(T_type_name == typeid(int16_t).name()) expected_dtype = DType::INT16;
-  else if(T_type_name == typeid(int32_t).name()) expected_dtype = DType::INT32;
-  else if(T_type_name == typeid(int64_t).name()) expected_dtype = DType::INT64;
-  else if(T_type_name == typeid(float).name()) expected_dtype = DType::FLOAT32;
-  else if(T_type_name == typeid(double).name()) expected_dtype = DType::DOUBLE64;
-  else if(T_type_name == typeid(std::complex<float>).name()) expected_dtype = DType::COMPLEX64;
-  else if(T_type_name == typeid(std::complex<double>).name()) expected_dtype = DType::COMPLEX128;
+  if (T_type_name == typeid(char).name())
+    expected_dtype = DType::CHAR;
+  else if (T_type_name == typeid(unsigned char).name())
+    expected_dtype = DType::UCHAR;
+  else if (T_type_name == typeid(uint16_t).name())
+    expected_dtype = DType::UINT16;
+  else if (T_type_name == typeid(uint32_t).name())
+    expected_dtype = DType::UINT32;
+  else if (T_type_name == typeid(uint64_t).name())
+    expected_dtype = DType::UINT64;
+  else if (T_type_name == typeid(int16_t).name())
+    expected_dtype = DType::INT16;
+  else if (T_type_name == typeid(int32_t).name())
+    expected_dtype = DType::INT32;
+  else if (T_type_name == typeid(int64_t).name())
+    expected_dtype = DType::INT64;
+  else if (T_type_name == typeid(float).name())
+    expected_dtype = DType::FLOAT32;
+  else if (T_type_name == typeid(double).name())
+    expected_dtype = DType::DOUBLE64;
+  else if (T_type_name == typeid(std::complex<float>).name())
+    expected_dtype = DType::COMPLEX64;
+  else if (T_type_name == typeid(std::complex<double>).name())
+    expected_dtype = DType::COMPLEX128;
   else {
-    std::string mssg = "The datatype is not supported for NDArray."; 
+    std::string mssg = "The datatype is not supported for NDArray.";
     throw std::runtime_error(mssg);
   }
 
@@ -293,23 +333,27 @@ NDArray<T> NDArray<T>::load(std::string fname) {
   load_npy(fname, data_ptr, data_shape, data_dtype, data_c_continuous);
 
   // Ensuire DType variables match
-  if(expected_dtype != data_dtype) {
-    std::string mssg = "NDArray template datatype does not match specified datatype in npy file."; 
+  if (expected_dtype != data_dtype) {
+    std::string mssg =
+        "NDArray template datatype does not match specified datatype in npy "
+        "file.";
     throw std::runtime_error(mssg);
   }
 
-  if(data_shape.size() < 1) {
-    std::string mssg = "Shape vector must have at least one element for NDArray."; 
+  if (data_shape.size() < 1) {
+    std::string mssg =
+        "Shape vector must have at least one element for NDArray.";
     throw std::runtime_error(mssg);
   }
-  
+
   // Number of elements
   size_t ne = data_shape[0];
-  for(size_t i = 1; i < data_shape.size(); i++) {
-    ne *= data_shape[i]; 
+  for (size_t i = 1; i < data_shape.size(); i++) {
+    ne *= data_shape[i];
   }
 
-  data_vector = {reinterpret_cast<T*>(data_ptr), reinterpret_cast<T*>(data_ptr)+ne};
+  data_vector = {reinterpret_cast<T*>(data_ptr),
+                 reinterpret_cast<T*>(data_ptr) + ne};
 
   // Create NDArray object
   NDArray<T> return_object(data_vector, data_shape);
@@ -322,7 +366,7 @@ NDArray<T> NDArray<T>::load(std::string fname) {
   return return_object;
 }
 
-template<class T>
+template <class T>
 NDARRAY_INLINE T& NDArray<T>::operator()(const std::vector<size_t>& indices) {
   size_t indx;
   if (c_continuous_) {
@@ -335,8 +379,9 @@ NDARRAY_INLINE T& NDArray<T>::operator()(const std::vector<size_t>& indices) {
   return data_[indx];
 }
 
-template<class T>
-NDARRAY_INLINE const T& NDArray<T>::operator()(const std::vector<size_t>& indices) const {
+template <class T>
+NDARRAY_INLINE const T& NDArray<T>::operator()(
+    const std::vector<size_t>& indices) const {
   size_t indx;
   if (c_continuous_) {
     // Get linear index for row-major order
@@ -348,7 +393,8 @@ NDARRAY_INLINE const T& NDArray<T>::operator()(const std::vector<size_t>& indice
   return data_[indx];
 }
 
-template<class T> template <typename... INDS>
+template <class T>
+template <typename... INDS>
 NDARRAY_INLINE T& NDArray<T>::operator()(INDS... inds) {
   std::array<size_t, sizeof...(inds)> indices{static_cast<size_t>(inds)...};
 
@@ -363,7 +409,8 @@ NDARRAY_INLINE T& NDArray<T>::operator()(INDS... inds) {
   return data_[indx];
 }
 
-template<class T> template <typename... INDS>
+template <class T>
+template <typename... INDS>
 NDARRAY_INLINE const T& NDArray<T>::operator()(INDS... inds) const {
   std::array<size_t, sizeof...(inds)> indices{static_cast<size_t>(inds)...};
 
@@ -378,24 +425,29 @@ NDARRAY_INLINE const T& NDArray<T>::operator()(INDS... inds) const {
   return data_[indx];
 }
 
-template<class T>
+template <class T>
 NDARRAY_INLINE T& NDArray<T>::operator[](size_t i) {
   return data_[i];
 }
 
-template<class T>
+template <class T>
 NDARRAY_INLINE const T& NDArray<T>::operator[](size_t i) const {
   return data_[i];
 }
 
-template<class T>
-NDARRAY_INLINE std::vector<size_t> NDArray<T>::shape() const {return shape_;}
+template <class T>
+NDARRAY_INLINE std::vector<size_t> NDArray<T>::shape() const {
+  return shape_;
+}
 
-template<class T>
-NDARRAY_INLINE size_t NDArray<T>::size() const {return data_.size();}
+template <class T>
+NDARRAY_INLINE size_t NDArray<T>::size() const {
+  return data_.size();
+}
 
-template<class T>
-NDARRAY_INLINE size_t NDArray<T>::linear_index(const std::vector<size_t>& indices) const {
+template <class T>
+NDARRAY_INLINE size_t
+NDArray<T>::linear_index(const std::vector<size_t>& indices) const {
   if (c_continuous_) {
     // Get linear index for row-major order
     return c_continuous_index(indices);
@@ -405,7 +457,8 @@ NDARRAY_INLINE size_t NDArray<T>::linear_index(const std::vector<size_t>& indice
   }
 }
 
-template<class T> template <typename... INDS>
+template <class T>
+template <typename... INDS>
 NDARRAY_INLINE size_t NDArray<T>::linear_index(INDS... inds) const {
   std::array<size_t, sizeof...(inds)> indices{static_cast<size_t>(inds)...};
 
@@ -417,79 +470,96 @@ NDARRAY_INLINE size_t NDArray<T>::linear_index(INDS... inds) const {
     return fortran_continuous_index(indices);
   }
 }
-    
-template<class T>
-NDARRAY_INLINE bool NDArray<T>::c_continuous() const {return c_continuous_;}
 
-template<class T>
+template <class T>
+NDARRAY_INLINE bool NDArray<T>::c_continuous() const {
+  return c_continuous_;
+}
+
+template <class T>
 void NDArray<T>::save(std::string fname) const {
   // Get expected DType according to T
   DType dtype;
   const char* T_type_name = typeid(T).name();
 
-  if(T_type_name == typeid(char).name()) dtype = DType::CHAR;
-  else if(T_type_name == typeid(unsigned char).name()) dtype = DType::UCHAR;
-  else if(T_type_name == typeid(uint16_t).name()) dtype = DType::UINT16;
-  else if(T_type_name == typeid(uint32_t).name()) dtype = DType::UINT32;
-  else if(T_type_name == typeid(uint64_t).name()) dtype = DType::UINT64;
-  else if(T_type_name == typeid(int16_t).name()) dtype = DType::INT16;
-  else if(T_type_name == typeid(int32_t).name()) dtype = DType::INT32;
-  else if(T_type_name == typeid(int64_t).name()) dtype = DType::INT64;
-  else if(T_type_name == typeid(float).name()) dtype = DType::FLOAT32;
-  else if(T_type_name == typeid(double).name()) dtype = DType::DOUBLE64;
-  else if(T_type_name == typeid(std::complex<float>).name()) dtype = DType::COMPLEX64;
-  else if(T_type_name == typeid(std::complex<double>).name()) dtype = DType::COMPLEX128;
+  if (T_type_name == typeid(char).name())
+    dtype = DType::CHAR;
+  else if (T_type_name == typeid(unsigned char).name())
+    dtype = DType::UCHAR;
+  else if (T_type_name == typeid(uint16_t).name())
+    dtype = DType::UINT16;
+  else if (T_type_name == typeid(uint32_t).name())
+    dtype = DType::UINT32;
+  else if (T_type_name == typeid(uint64_t).name())
+    dtype = DType::UINT64;
+  else if (T_type_name == typeid(int16_t).name())
+    dtype = DType::INT16;
+  else if (T_type_name == typeid(int32_t).name())
+    dtype = DType::INT32;
+  else if (T_type_name == typeid(int64_t).name())
+    dtype = DType::INT64;
+  else if (T_type_name == typeid(float).name())
+    dtype = DType::FLOAT32;
+  else if (T_type_name == typeid(double).name())
+    dtype = DType::DOUBLE64;
+  else if (T_type_name == typeid(std::complex<float>).name())
+    dtype = DType::COMPLEX64;
+  else if (T_type_name == typeid(std::complex<double>).name())
+    dtype = DType::COMPLEX128;
   else {
-    std::string mssg = "The datatype is not supported for NDArray."; 
+    std::string mssg = "The datatype is not supported for NDArray.";
     throw std::runtime_error(mssg);
   }
 
   // Write data to file
-  write_npy(fname, reinterpret_cast<const char*>(data_.data()), shape_,
-            dtype, c_continuous_);
+  write_npy(fname, reinterpret_cast<const char*>(data_.data()), shape_, dtype,
+            c_continuous_);
 }
 
-template<class T>
+template <class T>
 void NDArray<T>::fill(T val) {
-  std::fill(data_.begin(), data_.end(), val); 
+  std::fill(data_.begin(), data_.end(), val);
 }
 
-template<class T>
+template <class T>
 void NDArray<T>::reshape(std::vector<size_t> new_shape) {
   // Ensure new shape has proper dimensions
-  if(new_shape.size() < 1) {
-    std::string mssg = "Shape vector must have at least one element to"
-                       " reshpae NDArray.";
+  if (new_shape.size() < 1) {
+    std::string mssg =
+        "Shape vector must have at least one element to"
+        " reshpae NDArray.";
     throw std::runtime_error(mssg);
   } else {
     size_t ne = new_shape[0];
-    
-    for(size_t i = 1; i < new_shape.size(); i++) {
+
+    for (size_t i = 1; i < new_shape.size(); i++) {
       ne *= new_shape[i];
     }
 
-    if(ne == data_.size()) {
+    if (ne == data_.size()) {
       shape_ = new_shape;
       dimensions_ = shape_.size();
     } else {
-      std::string mssg = "Shape is incompatible with number of elements in"
-                         " NDArray.";
+      std::string mssg =
+          "Shape is incompatible with number of elements in"
+          " NDArray.";
       throw std::runtime_error(mssg);
     }
   }
 }
 
-template<class T>
+template <class T>
 void NDArray<T>::reallocate(std::vector<size_t> new_shape) {
   // Ensure new shape has proper dimensions
-  if(new_shape.size() < 1) {
-    std::string mssg = "Shape vector must have at least one element to"
-                       " reallocate NDArray.";
+  if (new_shape.size() < 1) {
+    std::string mssg =
+        "Shape vector must have at least one element to"
+        " reallocate NDArray.";
     throw std::runtime_error(mssg);
   } else {
     size_t ne = new_shape[0];
-    
-    for(size_t i = 1; i < new_shape.size(); i++) {
+
+    for (size_t i = 1; i < new_shape.size(); i++) {
       ne *= new_shape[i];
     }
 
@@ -499,276 +569,291 @@ void NDArray<T>::reallocate(std::vector<size_t> new_shape) {
   }
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator+=(const NDArray<C>& a) {
   // Ensure same number of dimensions
-  if(dimensions_ != a.dimensions_) {
+  if (dimensions_ != a.dimensions_) {
     std::string mssg = "Cannot add two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
-  for(size_t i = 0; i < dimensions_; i++) {
-   if(shape_[i] != a.shape_[i]) {
+  for (size_t i = 0; i < dimensions_; i++) {
+    if (shape_[i] != a.shape_[i]) {
       std::string mssg = "Cannot add two NDArrays with different shapes";
       throw std::runtime_error(mssg);
-    } 
+    }
   }
 
   // Do addition
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  += a.data_[i];
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] += a.data_[i];
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator-=(const NDArray<C>& a) {
   // Ensure same number of dimensions
-  if(dimensions_ != a.dimensions_) {
-    std::string mssg = "Cannot subtract two NDArrays with different dimensions.";
+  if (dimensions_ != a.dimensions_) {
+    std::string mssg =
+        "Cannot subtract two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
-  for(size_t i = 0; i < dimensions_; i++) {
-   if(shape_[i] != a.shape_[i]) {
+  for (size_t i = 0; i < dimensions_; i++) {
+    if (shape_[i] != a.shape_[i]) {
       std::string mssg = "Cannot subtract two NDArrays with different shapes";
       throw std::runtime_error(mssg);
-    } 
+    }
   }
 
   // Do subtraction
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  -= a.data_[i];
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] -= a.data_[i];
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator*=(const NDArray<C>& a) {
   // Ensure same number of dimensions
-  if(dimensions_ != a.dimensions_) {
-    std::string mssg = "Cannot multiply two NDArrays with different dimensions.";
+  if (dimensions_ != a.dimensions_) {
+    std::string mssg =
+        "Cannot multiply two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
-  for(size_t i = 0; i < dimensions_; i++) {
-   if(shape_[i] != a.shape_[i]) {
+  for (size_t i = 0; i < dimensions_; i++) {
+    if (shape_[i] != a.shape_[i]) {
       std::string mssg = "Cannot multiply two NDArrays with different shapes";
       throw std::runtime_error(mssg);
-    } 
+    }
   }
 
   // Do multiplication
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  *= a.data_[i];
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] *= a.data_[i];
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator/=(const NDArray<C>& a) {
   // Ensure same number of dimensions
-  if(dimensions_ != a.dimensions_) {
+  if (dimensions_ != a.dimensions_) {
     std::string mssg = "Cannot divide two NDArrays with different dimensions.";
     throw std::runtime_error(mssg);
   }
 
   // Ensure same shape
-  for(size_t i = 0; i < dimensions_; i++) {
-   if(shape_[i] != a.shape_[i]) {
+  for (size_t i = 0; i < dimensions_; i++) {
+    if (shape_[i] != a.shape_[i]) {
       std::string mssg = "Cannot divide two NDArrays with different shapes";
       throw std::runtime_error(mssg);
-    } 
+    }
   }
 
   // Do division
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  /= a.data_[i];
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] /= a.data_[i];
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator+=(C c) {
   // Do addition
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  += c;
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] += c;
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator-=(C c) {
   // Do subtraction
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  -= c.data_[i];
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] -= c.data_[i];
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator*=(C c) {
   // Do multiplication
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  *= c;
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] *= c;
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>& NDArray<T>::operator/=(C c) {
   // Do division
-  for(size_t i = 0; i < data_.size(); i++) {
-    data_[i]  /= c;
+  for (size_t i = 0; i < data_.size(); i++) {
+    data_[i] /= c;
   }
 
   return *this;
 }
 
-template<class T> template<class C>
+template <class T>
+template <class C>
 NDArray<T>::operator NDArray<C>() const {
   // Make array to be returned of same shape
   NDArray<C> new_array(shape_);
 
   // Go through all elements
-  for(size_t i = 0; i < data_.size(); i++) {
-    new_array[i] = data_[i]; 
+  for (size_t i = 0; i < data_.size(); i++) {
+    new_array[i] = data_[i];
   }
 
   return new_array;
 }
 
-template<class T>
-NDARRAY_INLINE size_t NDArray<T>::c_continuous_index(const std::vector<size_t>& indices) const {
+template <class T>
+NDARRAY_INLINE size_t
+NDArray<T>::c_continuous_index(const std::vector<size_t>& indices) const {
   // Make sure proper number of indices
-  if(indices.size() != dimensions_) {
-    std::string mssg = "Improper number of indicies provided to NDArray."; 
+  if (indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray.";
     throw std::runtime_error(mssg);
   }
 
   size_t indx = indices[dimensions_ - 1];
-  if(indx >= shape_[dimensions_ - 1]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
-      throw std::out_of_range(mssg);
+  if (indx >= shape_[dimensions_ - 1]) {
+    std::string mssg = "Index provided to NDArray out of range.";
+    throw std::out_of_range(mssg);
   }
 
   size_t coeff = 1;
 
-  for(size_t i = dimensions_ - 1; i > 0; i--) {
-    if(indices[i] >= shape_[i]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
+  for (size_t i = dimensions_ - 1; i > 0; i--) {
+    if (indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range.";
       throw std::out_of_range(mssg);
     }
 
     coeff *= shape_[i];
-    indx += coeff * indices[i-1];
+    indx += coeff * indices[i - 1];
   }
 
   return indx;
 }
 
-template<class T>
-NDARRAY_INLINE size_t NDArray<T>::fortran_continuous_index(const std::vector<size_t>& indices)
-const {
+template <class T>
+NDARRAY_INLINE size_t
+NDArray<T>::fortran_continuous_index(const std::vector<size_t>& indices) const {
   // Make sure proper number of indices
-  if(indices.size() != dimensions_) {
-    std::string mssg = "Improper number of indicies provided to NDArray."; 
+  if (indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray.";
     throw std::runtime_error(mssg);
   }
 
   size_t indx = indices[0];
-  if(indx >= shape_[0]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
-      throw std::out_of_range(mssg);
+  if (indx >= shape_[0]) {
+    std::string mssg = "Index provided to NDArray out of range.";
+    throw std::out_of_range(mssg);
   }
   size_t coeff = 1;
 
-  for (size_t i = 0; i < dimensions_-1; i++) {
-    if(indices[i] >= shape_[i]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
+  for (size_t i = 0; i < dimensions_ - 1; i++) {
+    if (indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range.";
       throw std::out_of_range(mssg);
     }
 
     coeff *= shape_[i];
-    indx += coeff * indices[i+1];
+    indx += coeff * indices[i + 1];
   }
 
   return indx;
 }
 
-template<class T> template<size_t D>
-NDARRAY_INLINE size_t NDArray<T>::c_continuous_index(const std::array<size_t, D>& indices)
-const {
+template <class T>
+template <size_t D>
+NDARRAY_INLINE size_t
+NDArray<T>::c_continuous_index(const std::array<size_t, D>& indices) const {
   // Make sure proper number of indices
-  if(indices.size() != dimensions_) {
-    std::string mssg = "Improper number of indicies provided to NDArray."; 
+  if (indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray.";
     throw std::runtime_error(mssg);
   }
 
   size_t indx = indices[dimensions_ - 1];
-  if(indx >= shape_[dimensions_ - 1]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
-      throw std::out_of_range(mssg);
+  if (indx >= shape_[dimensions_ - 1]) {
+    std::string mssg = "Index provided to NDArray out of range.";
+    throw std::out_of_range(mssg);
   }
 
   size_t coeff = 1;
 
-  for(size_t i = dimensions_ - 1; i > 0; i--) {
-    if(indices[i] >= shape_[i]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
+  for (size_t i = dimensions_ - 1; i > 0; i--) {
+    if (indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range.";
       throw std::out_of_range(mssg);
     }
 
     coeff *= shape_[i];
-    indx += coeff * indices[i-1];
+    indx += coeff * indices[i - 1];
   }
 
   return indx;
 }
 
-template<class T> template<size_t D>
-NDARRAY_INLINE size_t NDArray<T>::fortran_continuous_index(const std::array<size_t, D>& indices)
-const {
-   // Make sure proper number of indices
-  if(indices.size() != dimensions_) {
-    std::string mssg = "Improper number of indicies provided to NDArray."; 
+template <class T>
+template <size_t D>
+NDARRAY_INLINE size_t NDArray<T>::fortran_continuous_index(
+    const std::array<size_t, D>& indices) const {
+  // Make sure proper number of indices
+  if (indices.size() != dimensions_) {
+    std::string mssg = "Improper number of indicies provided to NDArray.";
     throw std::runtime_error(mssg);
   }
 
   size_t indx = indices[0];
-  if(indx >= shape_[0]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
-      throw std::out_of_range(mssg);
+  if (indx >= shape_[0]) {
+    std::string mssg = "Index provided to NDArray out of range.";
+    throw std::out_of_range(mssg);
   }
   size_t coeff = 1;
 
-  for (size_t i = 0; i < dimensions_-1; i++) {
-    if(indices[i] >= shape_[i]) {
-      std::string mssg = "Index provided to NDArray out of range."; 
+  for (size_t i = 0; i < dimensions_ - 1; i++) {
+    if (indices[i] >= shape_[i]) {
+      std::string mssg = "Index provided to NDArray out of range.";
       throw std::out_of_range(mssg);
     }
 
     coeff *= shape_[i];
-    indx += coeff * indices[i+1];
+    indx += coeff * indices[i + 1];
   }
 
-  return indx; 
+  return indx;
 }
 
 //==============================================================================
 // NPY Function Definitions
 inline void load_npy(std::string fname, char*& data_ptr,
-              std::vector<size_t>& shape, DType& dtype, bool& c_contiguous) {
+                     std::vector<size_t>& shape, DType& dtype,
+                     bool& c_contiguous) {
   // Open file
   std::ifstream file(fname);
 
@@ -909,7 +994,8 @@ inline void load_npy(std::string fname, char*& data_ptr,
 }
 
 inline void write_npy(std::string fname, const char* data_ptr,
-               std::vector<size_t> shape, DType dtype, bool c_contiguous) {
+                      std::vector<size_t> shape, DType dtype,
+                      bool c_contiguous) {
   // Calculate number of elements from the shape
   uint64_t n_elements = shape[0];
   for (size_t j = 1; j < shape.size(); j++) {
@@ -1184,4 +1270,4 @@ inline void swap_sixteen_bytes(char* bytes) {
   bytes[14] = temp[1];
   bytes[15] = temp[0];
 }
-#endif // NP_ARRAY_H
+#endif  // NP_ARRAY_H
