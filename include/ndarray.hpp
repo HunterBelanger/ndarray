@@ -235,7 +235,7 @@ void swap_sixteen_bytes(char* bytes);
 //==============================================================================
 // NDArray Implementation
 template <class T>
-NDArray<T>::NDArray() {}
+NDArray<T>::NDArray():data_{}, shape_{}, c_continuous_{true}, dimensions_{0} {}
 
 template <class T>
 NDArray<T>::NDArray(std::vector<size_t> init_shape, bool c_continuous) {
