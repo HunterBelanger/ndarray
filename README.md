@@ -40,7 +40,7 @@ any type, the load and save methods are only valid for the following templates:
 * ```NDArray<std::complex<float>>```
 * ```NDArray<std::complex<double>>```
 
-This is due to the fact that only certain numberic types are allowed by Numpy.
+This is due to the fact that only certain numeric types are allowed by Numpy.
 Attempting to save a NDArray templated for a different type will result in
 and exception being thrown. Python and Numpy allow for the storing of raw
 Python objects in ```.npy``` files, but the loading of such files into a C++
