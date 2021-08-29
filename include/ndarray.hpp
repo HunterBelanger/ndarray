@@ -332,7 +332,7 @@ NDArray<T> NDArray<T>::load(std::string fname) {
   // Load data into variables
   load_npy(fname, data_ptr, data_shape, data_dtype, data_c_continuous);
 
-  // Ensuire DType variables match
+  // Ensure DType variables match
   if (expected_dtype != data_dtype) {
     std::string mssg =
         "NDArray template datatype does not match specified datatype in npy "
