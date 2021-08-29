@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 project(NDArray
+  VERSION "0.1.0"
   DESCRIPTION "Numpy-like N-Dimentional array for C++"
   LANGUAGES CXX
 )
