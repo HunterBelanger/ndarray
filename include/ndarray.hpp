@@ -1107,64 +1107,94 @@ inline DType descr_to_DType(std::string dtype) {
 }
 
 inline std::string DType_to_descr(DType dtype) {
-  if (dtype == DType::CHAR)
-    return "b1";
-  else if (dtype == DType::UCHAR)
-    return "B1";
-  else if (dtype == DType::INT16)
-    return "i2";
-  else if (dtype == DType::INT32)
-    return "i4";
-  else if (dtype == DType::INT64)
-    return "i8";
-  else if (dtype == DType::UINT16)
-    return "u2";
-  else if (dtype == DType::UINT32)
-    return "u4";
-  else if (dtype == DType::UINT64)
-    return "u8";
-  else if (dtype == DType::FLOAT32)
-    return "f4";
-  else if (dtype == DType::DOUBLE64)
-    return "f8";
-  else if (dtype == DType::COMPLEX64)
-    return "c8";
-  else if (dtype == DType::COMPLEX128)
-    return "c16";
-  else {
-    std::string mssg = "Unknown DType identifier.";
-    throw std::runtime_error(mssg);
+  switch (dtype) {
+    case DType::CHAR:
+      return "b1"; 
+      break;
+    case DType::UCHAR:
+      return "B1";
+      break;
+    case DType::INT16:
+      return "i2";
+      break;
+    case DType::INT32:
+      return "i4";
+      break;
+    case DType::INT64:
+      return "i8";
+      break;
+    case DType::UINT16:
+      return "u2";
+      break;
+    case DType::UINT32:
+      return "u4";
+      break;
+    case DType::UINT64:
+      return "u8";
+      break;
+    case DType::FLOAT32:
+      return "f4";
+      break;
+    case DType::DOUBLE64:
+      return "f8";
+      break;
+    case DType::COMPLEX64:
+      return "c8";
+      break;
+    case DType::COMPLEX128:
+      return "c16";
+      break;
+    default: {
+      std::string mssg = "Unknown DType identifier.";
+      throw std::runtime_error(mssg);        
+      break;
+    }
   }
 }
 
 inline size_t size_of_DType(DType dtype) {
-  if (dtype == DType::CHAR)
-    return 1;
-  else if (dtype == DType::UCHAR)
-    return 1;
-  else if (dtype == DType::INT16)
-    return 2;
-  else if (dtype == DType::INT32)
-    return 4;
-  else if (dtype == DType::INT64)
-    return 8;
-  else if (dtype == DType::UINT16)
-    return 2;
-  else if (dtype == DType::UINT32)
-    return 4;
-  else if (dtype == DType::UINT64)
-    return 8;
-  else if (dtype == DType::FLOAT32)
-    return 4;
-  else if (dtype == DType::DOUBLE64)
-    return 8;
-  else if (dtype == DType::COMPLEX64)
-    return 8;
-  else if (dtype == DType::COMPLEX128)
-    return 16;
-  else {
-    std::string mssg = "Unknown DType identifier.";
-    throw std::runtime_error(mssg);
+  switch (dtype) {
+    case DType::CHAR:
+      return 1;
+      break;
+    case DType::UCHAR:
+      return 1;
+      break;
+    case DType::INT16:
+      return 2;
+      break;
+    case DType::INT32:
+      return 4;
+      break;
+    case DType::INT64:
+      return 8;
+      break;
+    case DType::UINT16:
+      return 2;
+      break;
+    case DType::UINT32:
+      return 4;
+      break;
+    case DType::UINT64:
+      return 8;
+      break;
+    case DType::FLOAT32:
+      return 4;
+      break;
+    case DType::DOUBLE64:
+      return 8;
+      break;
+    case DType::COMPLEX64:
+      return 8;
+      break;
+    case DType::COMPLEX128:
+      return 16;
+      break;
+    default: {
+      std::string mssg = "Unknown DType identifier.";
+      throw std::runtime_error(mssg);        
+      break;
+    }
   }
 }
 
@@ -1183,20 +1213,27 @@ inline void swap_bytes(char* data, uint64_t n_elements, size_t element_size) {
 
   // Iterate through all elements, and swap their bytes
   for (uint64_t i = 0; i < number_of_bytes; i += element_size) {
-    if (element_size == 1) {
-      // Nothing to do
-    } else if (element_size == 2) {
-      swap_two_bytes(data + i);
-    } else if (element_size == 4) {
-      swap_four_bytes(data + i);
-    } else if (element_size == 8) {
-      swap_eight_bytes(data + i);
-    } else if (element_size == 16) {
-      swap_sixteen_bytes(data + i);
-    } else {
-      std::string mssg = "Cannot swap bytes for data types of size " +
-                         std::to_string(element_size);
-      throw std::runtime_error(mssg);
+    switch (element_size) {
+      case 1:
+        // Nothing to do
+        break;
+      case 2:
+        swap_two_bytes(data + i);  
+        break;
+      case 4:
+        swap_four_bytes(data + i);
+        break;
+      case 8:
+        swap_eight_bytes(data + i);
+        break;
+      case 16:
+        swap_sixteen_bytes(data + i);
+        break;
+      default:
+        std::string mssg = "Cannot swap bytes for data types of size " +
+                           std::to_string(element_size);
+        throw std::runtime_error(mssg);
+        break;
     }
   }
 }
