@@ -962,20 +962,20 @@ inline void load_npy(std::string fname, char*& data_ptr,
         temp += header[i];
       else {
         if (temp.size() > 0) {
-          shape.push_back(std::stoi(temp));
+          shape.push_back(static_cast<size_t>(std::stoul(temp)));
           temp = "";
         }
       }
     }
     if (temp.size() > 0) {
-      shape.push_back(std::stoi(temp));
+      shape.push_back(static_cast<size_t>(std::stoul(temp)));
     }
   }
 
   // Get number of bytes to be read into system
-  uint64_t n_elements = shape[0];
+  size_t n_elements = shape[0];
   for (size_t j = 1; j < shape.size(); j++) n_elements *= shape[j];
-  uint64_t n_bytes_to_read = n_elements * element_size;
+  std::streamsize n_bytes_to_read = static_cast<std::streamsize>(n_elements * element_size);
   char* data = new char[n_bytes_to_read];
   file.read(data, n_bytes_to_read);
 
@@ -997,7 +997,7 @@ inline void write_npy(std::string fname, const char* data_ptr,
                       std::vector<size_t> shape, DType dtype,
                       bool c_contiguous) {
   // Calculate number of elements from the shape
-  uint64_t n_elements = shape[0];
+  size_t n_elements = shape[0];
   for (size_t j = 1; j < shape.size(); j++) {
     n_elements *= shape[j];
   }
@@ -1068,7 +1068,7 @@ inline void write_npy(std::string fname, const char* data_ptr,
   file << header.c_str();
 
   // Write all data to file
-  uint64_t n_bytes = n_elements * size_of_DType(dtype);
+  std::streamsize n_bytes = static_cast<std::streamsize>(n_elements * size_of_DType(dtype));
   file.write(data_ptr, n_bytes);
 
   // Close file
