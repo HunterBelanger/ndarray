@@ -976,7 +976,7 @@ inline void load_npy(std::string fname, char*& data_ptr,
   size_t n_elements = shape[0];
   for (size_t j = 1; j < shape.size(); j++) n_elements *= shape[j];
   std::streamsize n_bytes_to_read = static_cast<std::streamsize>(n_elements * element_size);
-  char* data = new char[n_bytes_to_read];
+  char* data = new char[static_cast<std::size_t>(n_bytes_to_read)];
   file.read(data, n_bytes_to_read);
 
   // If byte order of data different from byte order of system, swap data bytes
