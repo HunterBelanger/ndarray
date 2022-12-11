@@ -1003,7 +1003,7 @@ inline void write_npy(std::string fname, const char* data_ptr,
   }
 
   // Open file
-  std::ofstream file(fname);
+  std::ofstream file(fname, std::ios::binary);
 
   // First write magic string
   file << '\x93' << 'N' << 'U' << 'M' << 'P' << 'Y';
