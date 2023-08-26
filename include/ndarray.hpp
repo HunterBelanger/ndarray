@@ -68,7 +68,15 @@ class NDArray {
   NDArray(const std::vector<size_t>& init_shape, bool c_continuous = true);
   NDArray(const std::vector<T>& data, const std::vector<size_t>& init_shape,
           bool c_continuous = true);
+  NDArray(std::vector<T>&& data, const std::vector<size_t>& init_shape,
+          bool c_continuous = true);
   ~NDArray() = default;
+  NDArray(const NDArray&) = default;
+  NDArray(NDArray&&) = default;
+
+  // Assignment Operator
+  NDArray& operator=(const NDArray&) = default;
+  NDArray& operator=(NDArray&&) = default;
 
   // Static load function
   static NDArray load(const std::string& fname);
@@ -288,6 +296,36 @@ NDArray<T>::NDArray(const std::vector<T>& data, const std::vector<size_t>& init_
 }
 
 template <class T>
+NDArray<T>::NDArray(std::vector<T>&& data, const std::vector<size_t>& init_shape,
+                    bool c_continuous) {
+  if (init_shape.size() > 0) {
+    shape_ = init_shape;
+    dimensions_ = shape_.size();
+
+    size_t ne = init_shape[0];
+    for (size_t i = 1; i < dimensions_; i++) {
+      ne *= init_shape[i];
+    }
+
+    if (ne != data.size()) {
+      std::string mssg =
+          "Shape is incompatible with number of elements provided for NDArray.";
+      throw std::runtime_error(mssg);
+    }
+
+    data_ = std::move(data);
+
+    c_continuous_ = c_continuous;
+
+  } else {
+    std::string mssg =
+        "Shape vector must have at least one element for NDArray.";
+    throw std::runtime_error(mssg);
+  }
+}
+
+
+template <class T>
 NDArray<T> NDArray<T>::load(const std::string &fname) {
   // Get expected DType according to T
   DType expected_dtype;
@@ -355,15 +393,15 @@ NDArray<T> NDArray<T>::load(const std::string &fname) {
   data_vector = {reinterpret_cast<T*>(data_ptr),
                  reinterpret_cast<T*>(data_ptr) + ne};
 
-  // Create NDArray object
-  NDArray<T> return_object(data_vector, data_shape);
-  return_object.c_continuous_ = data_c_continuous;
-
   // Free data_ptr
   delete[] data_ptr;
 
+  // Create NDArray object
+  NDArray<T> return_object(std::move(data_vector), data_shape);
+  return_object.c_continuous_ = data_c_continuous;
+
   // Return object
-  return return_object;
+  return std::move(return_object);
 }
 
 template <class T>
@@ -726,7 +764,7 @@ NDArray<T>::operator NDArray<C>() const {
     new_array[i] = data_[i];
   }
 
-  return new_array;
+  return std::move(new_array);
 }
 
 template <class T>
