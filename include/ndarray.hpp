@@ -102,6 +102,9 @@ class NDArray {
   //==========================================================================
   // Constant Methods
 
+  // Return underlying data vector
+  const std::vector<T>& data_vector() const;
+
   // Return vector describing shape of array
   const std::vector<size_t>& shape() const;
 
@@ -471,6 +474,11 @@ NDARRAY_INLINE T& NDArray<T>::operator[](size_t i) {
 template <class T>
 NDARRAY_INLINE const T& NDArray<T>::operator[](size_t i) const {
   return data_[i];
+}
+
+template <class T>
+NDARRAY_INLINE const std::vector<T>& NDArray<T>::data_vector() const {
+  return data_;
 }
 
 template <class T>
