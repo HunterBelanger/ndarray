@@ -65,13 +65,13 @@ class NDArray {
   //==========================================================================
   // Constructors and Destructors
   NDArray();
-  NDArray(std::vector<size_t> init_shape, bool c_continuous = true);
-  NDArray(std::vector<T> data, std::vector<size_t> init_shape,
+  NDArray(const std::vector<size_t>& init_shape, bool c_continuous = true);
+  NDArray(const std::vector<T>& data, const std::vector<size_t>& init_shape,
           bool c_continuous = true);
   ~NDArray() = default;
 
   // Static load function
-  static NDArray load(std::string fname);
+  static NDArray load(const std::string& fname);
 
   //==========================================================================
   // Indexing
@@ -81,7 +81,7 @@ class NDArray {
   const T& operator()(const std::vector<size_t>& indices) const;
 
   // Variadic indexing operators
-  // Access data with array idicies.
+  // Access data with array indices.
   template <typename... INDS>
   T& operator()(INDS... inds);
   template <typename... INDS>
@@ -95,7 +95,7 @@ class NDArray {
   // Constant Methods
 
   // Return vector describing shape of array
-  std::vector<size_t> shape() const;
+  const std::vector<size_t>& shape() const;
 
   // Return number of elements in array
   size_t size() const;
@@ -110,20 +110,20 @@ class NDArray {
   bool c_continuous() const;
 
   // Save array to the file fname.npy
-  void save(std::string fname) const;
+  void save(const std::string& fname) const;
 
   //==========================================================================
   // Non-Constant Methods
 
   // Fills entire array with the value provided
-  void fill(T val);
+  void fill(const T& val);
 
   // Will reshape the array to the given dimensions
-  void reshape(std::vector<size_t> new_shape);
+  void reshape(const std::vector<size_t>& new_shape);
 
   // Realocates array to fit the new size.
   // DATA CAN BE LOST IF ARRAY IS SHRUNK
-  void reallocate(std::vector<size_t> new_shape);
+  void reallocate(const std::vector<size_t>& new_shape);
 
   //==========================================================================
   // Operators for Any Type (Same or Different)
@@ -139,13 +139,13 @@ class NDArray {
   //==========================================================================
   // Operators for Constants
   template <class C>
-  NDArray& operator+=(C c);
+  NDArray& operator+=(const C& c);
   template <class C>
-  NDArray& operator-=(C c);
+  NDArray& operator-=(const C& c);
   template <class C>
-  NDArray& operator*=(C c);
+  NDArray& operator*=(const C& c);
   template <class C>
-  NDArray& operator/=(C c);
+  NDArray& operator/=(const C& c);
 
   //==========================================================================
   // Conversion Operator
@@ -196,15 +196,15 @@ enum class DType {
 // array of chars, which must latter be type cast be the user. The char* to
 // the data is returned as a reference, along with the number of elements,
 // continuits, and element size in bytes. Returned is a vector for the shape.
-void load_npy(std::string fname, char*& data_ptr, std::vector<size_t>& shape,
+void load_npy(const std::string& fname, char*& data_ptr, std::vector<size_t>& shape,
               DType& dtype, bool& c_contiguous);
 
 // Function which writes binary data to a Numpy .npy file.
-void write_npy(std::string fname, const char* data_ptr,
-               std::vector<size_t> shape, DType dtype, bool c_contiguous);
+void write_npy(const std::string& fname, const char* data_ptr,
+               const std::vector<size_t>& shape, DType dtype, bool c_contiguous);
 
 // Returns the proper DType for a given Numpy dtype.descr string.
-DType descr_to_DType(std::string dtype);
+DType descr_to_DType(const std::string& dtype);
 
 // Returns Numpy descr string for given DType
 std::string DType_to_descr(DType dtype);
@@ -238,7 +238,7 @@ template <class T>
 NDArray<T>::NDArray():data_{}, shape_{}, c_continuous_{true}, dimensions_{0} {}
 
 template <class T>
-NDArray<T>::NDArray(std::vector<size_t> init_shape, bool c_continuous) {
+NDArray<T>::NDArray(const std::vector<size_t>& init_shape, bool c_continuous) {
   if (init_shape.size() > 0) {
     shape_ = init_shape;
     dimensions_ = shape_.size();
@@ -259,7 +259,7 @@ NDArray<T>::NDArray(std::vector<size_t> init_shape, bool c_continuous) {
 }
 
 template <class T>
-NDArray<T>::NDArray(std::vector<T> data, std::vector<size_t> init_shape,
+NDArray<T>::NDArray(const std::vector<T>& data, const std::vector<size_t>& init_shape,
                     bool c_continuous) {
   if (init_shape.size() > 0) {
     shape_ = init_shape;
@@ -288,7 +288,7 @@ NDArray<T>::NDArray(std::vector<T> data, std::vector<size_t> init_shape,
 }
 
 template <class T>
-NDArray<T> NDArray<T>::load(std::string fname) {
+NDArray<T> NDArray<T>::load(const std::string &fname) {
   // Get expected DType according to T
   DType expected_dtype;
   const char* T_type_name = typeid(T).name();
@@ -436,7 +436,7 @@ NDARRAY_INLINE const T& NDArray<T>::operator[](size_t i) const {
 }
 
 template <class T>
-NDARRAY_INLINE std::vector<size_t> NDArray<T>::shape() const {
+NDARRAY_INLINE const std::vector<size_t>& NDArray<T>::shape() const {
   return shape_;
 }
 
@@ -477,7 +477,7 @@ NDARRAY_INLINE bool NDArray<T>::c_continuous() const {
 }
 
 template <class T>
-void NDArray<T>::save(std::string fname) const {
+void NDArray<T>::save(const std::string& fname) const {
   // Get expected DType according to T
   DType dtype;
   const char* T_type_name = typeid(T).name();
@@ -517,12 +517,12 @@ void NDArray<T>::save(std::string fname) const {
 }
 
 template <class T>
-void NDArray<T>::fill(T val) {
+void NDArray<T>::fill(const T& val) {
   std::fill(data_.begin(), data_.end(), val);
 }
 
 template <class T>
-void NDArray<T>::reshape(std::vector<size_t> new_shape) {
+void NDArray<T>::reshape(const std::vector<size_t>& new_shape) {
   // Ensure new shape has proper dimensions
   if (new_shape.size() < 1) {
     std::string mssg =
@@ -549,7 +549,7 @@ void NDArray<T>::reshape(std::vector<size_t> new_shape) {
 }
 
 template <class T>
-void NDArray<T>::reallocate(std::vector<size_t> new_shape) {
+void NDArray<T>::reallocate(const std::vector<size_t>& new_shape) {
   // Ensure new shape has proper dimensions
   if (new_shape.size() < 1) {
     std::string mssg =
@@ -673,7 +673,7 @@ NDArray<T>& NDArray<T>::operator/=(const NDArray<C>& a) {
 
 template <class T>
 template <class C>
-NDArray<T>& NDArray<T>::operator+=(C c) {
+NDArray<T>& NDArray<T>::operator+=(const C& c) {
   // Do addition
   for (size_t i = 0; i < data_.size(); i++) {
     data_[i] += c;
@@ -684,7 +684,7 @@ NDArray<T>& NDArray<T>::operator+=(C c) {
 
 template <class T>
 template <class C>
-NDArray<T>& NDArray<T>::operator-=(C c) {
+NDArray<T>& NDArray<T>::operator-=(const C& c) {
   // Do subtraction
   for (size_t i = 0; i < data_.size(); i++) {
     data_[i] -= c;
@@ -695,7 +695,7 @@ NDArray<T>& NDArray<T>::operator-=(C c) {
 
 template <class T>
 template <class C>
-NDArray<T>& NDArray<T>::operator*=(C c) {
+NDArray<T>& NDArray<T>::operator*=(const C& c) {
   // Do multiplication
   for (size_t i = 0; i < data_.size(); i++) {
     data_[i] *= c;
@@ -706,7 +706,7 @@ NDArray<T>& NDArray<T>::operator*=(C c) {
 
 template <class T>
 template <class C>
-NDArray<T>& NDArray<T>::operator/=(C c) {
+NDArray<T>& NDArray<T>::operator/=(const C& c) {
   // Do division
   for (size_t i = 0; i < data_.size(); i++) {
     data_[i] /= c;
@@ -851,7 +851,7 @@ NDARRAY_INLINE size_t NDArray<T>::fortran_continuous_index(
 
 //==============================================================================
 // NPY Function Definitions
-inline void load_npy(std::string fname, char*& data_ptr,
+inline void load_npy(const std::string& fname, char*& data_ptr,
                      std::vector<size_t>& shape, DType& dtype,
                      bool& c_contiguous) {
   // Open file
@@ -993,8 +993,8 @@ inline void load_npy(std::string fname, char*& data_ptr,
   file.close();
 }
 
-inline void write_npy(std::string fname, const char* data_ptr,
-                      std::vector<size_t> shape, DType dtype,
+inline void write_npy(const std::string& fname, const char* data_ptr,
+                      const std::vector<size_t>& shape, DType dtype,
                       bool c_contiguous) {
   // Calculate number of elements from the shape
   size_t n_elements = shape[0];
@@ -1075,7 +1075,7 @@ inline void write_npy(std::string fname, const char* data_ptr,
   file.close();
 }
 
-inline DType descr_to_DType(std::string dtype) {
+inline DType descr_to_DType(const std::string& dtype) {
   if (dtype == "b1")
     return DType::CHAR;
   else if (dtype == "B1")
