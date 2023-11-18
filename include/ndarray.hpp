@@ -409,7 +409,7 @@ NDArray<T> NDArray<T>::load(const std::string &fname) {
   return_object.c_continuous_ = data_c_continuous;
 
   // Return object
-  return std::move(return_object);
+  return return_object;
 }
 
 template <class T>
